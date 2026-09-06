@@ -97,7 +97,7 @@ export default function EventDetails({ admin = false }) {
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between text-[12px] text-white/70">
-            <span>Registirations</span>
+            <span>Participants</span>
             <span>15/50</span>
           </div>
           <div className="mt-1 h-[3px] w-full rounded bg-white/10">
@@ -166,7 +166,10 @@ export default function EventDetails({ admin = false }) {
                     className="size-9 rounded-[8px] bg-[rgba(123,136,255,0.1)] hover:bg-[rgba(123,136,255,0.25)]"
                   />
                 )}
-                <div className="flex-1">
+                <div
+                  className={`flex-1 ${admin ? '' : 'cursor-pointer hover:brightness-125'}`}
+                  onClick={admin ? undefined : () => navigate(`/agent/members/${p.id}`)}
+                >
                   <p className="text-[13px] font-bold">
                     {p.name}{' '}
                     {p.member && <span className="ml-2 text-[11px] font-normal text-accent">· Member</span>}

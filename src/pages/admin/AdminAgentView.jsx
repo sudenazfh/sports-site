@@ -42,8 +42,8 @@ export default function AdminAgentView() {
         <span className="rounded-[10px] bg-night/70 px-3 py-1 font-mono text-[11px] text-white/80">Association</span>
       </div>
 
-      <div className="flex items-start gap-7 p-7 pt-5">
-        <div className="flex w-[610px] flex-col gap-5">
+      <div className="flex flex-wrap items-start gap-7 p-7 pt-5">
+        <div className="flex min-w-[480px] flex-[1.4] flex-col gap-5">
           <div className="flex gap-4">
             <button type="button" className="flex-1 rounded-[10px] bg-field py-3 text-[14px] font-bold text-white hover:brightness-125">
               VIEW AGENT INFO
@@ -140,7 +140,7 @@ export default function AdminAgentView() {
             ) : (
               <>
                 <div className="mt-4 flex items-center justify-between text-[12px] text-white/70">
-                  <span>Registirations</span>
+                  <span>Participants</span>
                   <span>
                     {e.taken}/{e.capacity}
                   </span>

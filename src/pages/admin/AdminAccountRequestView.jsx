@@ -12,8 +12,8 @@ export default function AdminAccountRequestView() {
 
   return (
     <AppLayout title="Account Requests" role="admin">
-      <div className="flex items-start gap-7 p-7">
-        <div className="flex w-[720px] flex-col gap-5">
+      <div className="flex flex-wrap items-start gap-7 p-7">
+        <div className="flex min-w-[520px] flex-[1.6] flex-col gap-5">
           <section className="flex flex-col gap-4 rounded-[15px] border border-white/10 bg-card p-8">
             <div className="grid grid-cols-2 gap-5">
               <div className="flex flex-col gap-2">

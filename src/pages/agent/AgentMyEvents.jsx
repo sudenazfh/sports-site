@@ -120,7 +120,7 @@ export default function AgentMyEvents() {
             ) : (
               <>
                 <div className="mt-4 flex items-center justify-between text-[12px] text-white/70">
-                  <span>Registirations</span>
+                  <span>Participants</span>
                   <span>
                     {e.taken}/{e.capacity}
                   </span>

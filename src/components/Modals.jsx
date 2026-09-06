@@ -93,6 +93,43 @@ export function LoginRequiredModal({ onClose }) {
   )
 }
 
+export function CommissionModal({ onCancel, onSave }) {
+  return (
+    <Modal>
+      <div className="flex flex-col gap-2">
+        <p className="text-[15px] font-bold">Membership Commision (%)</p>
+        <input
+          placeholder="Commission rate to be collected from each member"
+          className="w-full rounded-[8px] border border-white/20 bg-night px-4 py-3 text-[13px] text-white placeholder:text-white/50 outline-none focus:border-accent"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-[15px] font-bold">Set Default Event Commision (%)</p>
+        <input
+          placeholder="Commission rate to be deducted from each event"
+          className="w-full rounded-[8px] border border-white/20 bg-night px-4 py-3 text-[13px] text-white placeholder:text-white/50 outline-none focus:border-accent"
+        />
+      </div>
+      <div className="flex justify-center gap-6">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-[135px] rounded-[8px] bg-night py-2.5 text-[13px] font-bold text-white hover:brightness-150"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          className="w-[135px] rounded-[8px] bg-[rgba(123,136,255,0.2)] py-2.5 text-[13px] font-bold text-accent hover:brightness-125"
+        >
+          Save
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 export function DocumentModal({ title = 'ID Document', onClose }) {
   const [docs, setDocs] = useState([
     { id: 1, name: `${title.split(' ')[0]} 2026`, default: true },

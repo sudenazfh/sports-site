@@ -60,7 +60,7 @@ export default function AgentDashboard() {
               </div>
             </div>
             <div className="mt-4 flex items-center justify-between text-[12px] text-white/70">
-              <span>Registirations</span>
+              <span>Participants</span>
               <span>15/50</span>
             </div>
             <div className="mt-1 h-[3px] w-full rounded bg-white/10">

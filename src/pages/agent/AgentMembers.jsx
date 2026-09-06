@@ -14,21 +14,24 @@ export default function AgentMembers() {
 
   const shown = members.filter((m) => m.name.toLowerCase().includes(query.toLowerCase()))
 
+  const expiring = members.filter((m) => m.urgent).length
+  const revenue = members.reduce((sum, m) => sum + Number(m.payment.replace('€', '')), 0)
+
   return (
-    <AppLayout title="Members (Total 147)" role="agent">
+    <AppLayout title={`Members (Total ${members.length})`} role="agent">
       <div className="flex flex-col gap-5 p-7">
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-5 py-4">
             <p className="text-[14px] font-bold">Members:</p>
-            <p className="text-[20px] font-extrabold text-accent">147</p>
+            <p className="text-[20px] font-extrabold text-accent">{members.length}</p>
           </div>
           <div className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-5 py-4">
             <p className="text-[14px] font-bold">Expiring Soon:</p>
-            <p className="text-[20px] font-extrabold text-[#f73f52]">9</p>
+            <p className="text-[20px] font-extrabold text-[#f73f52]">{expiring}</p>
           </div>
           <div className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-5 py-4">
             <p className="text-[14px] font-bold">Monthly Revenue:</p>
-            <p className="text-[20px] font-extrabold">€1,764</p>
+            <p className="text-[20px] font-extrabold">€{revenue}</p>
           </div>
           <button
             type="button"

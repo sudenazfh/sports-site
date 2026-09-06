@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
+import { CommissionModal } from '../../components/Modals.jsx'
 
 export function AdminSearchBar({ query, onQuery, dropdowns = 1 }) {
   return (
@@ -106,6 +107,7 @@ export function AccountRequests() {
 
 export function Accounts() {
   const [query, setQuery] = useState('')
+  const [commissionFor, setCommissionFor] = useState(null)
   const [rows, setRows] = useState([
     { id: 1, name: 'Famagusta Athletic Union', sub: 'Agent Since: 1 January 2024', banned: false, role: 'agent' },
     { id: 2, name: 'İdil Derin', sub: 'User Since: 11 June 2025', banned: false, role: 'user' },
@@ -157,7 +159,7 @@ export function Accounts() {
             >
               {r.banned ? 'Remove Ban' : 'Ban'}
             </button>
-            <button type="button" className={greyBtnCls}>
+            <button type="button" onClick={() => setCommissionFor(r)} className={greyBtnCls}>
               Commission
             </button>
             <Link to={r.role === 'agent' ? '/admin/agent-view' : '/admin/user-view'} className={viewBtnCls}>
@@ -165,6 +167,9 @@ export function Accounts() {
             </Link>
           </AdminRow>
         ))}
+        {commissionFor && (
+          <CommissionModal onCancel={() => setCommissionFor(null)} onSave={() => setCommissionFor(null)} />
+        )}
       </div>
     </AppLayout>
   )

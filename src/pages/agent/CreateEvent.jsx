@@ -70,11 +70,19 @@ export default function CreateEvent({ mode = 'agent' }) {
       setSaveError(err.message)
     }
   }
-  const [dates, setDates] = useState([
-    { date: '05.08.2026', time: '20.00' },
-    { date: '06.08.2026', time: '19.00' },
-    { date: '08.08.2026', time: '20.00' },
-  ])
+  // agent yeni etkinlik oluşturur: boş form + placeholder; admin/report bir başvuruyu görüntüler: örnek değerler dolu
+  const filled = admin || report
+  const dv = (val) => (filled ? { defaultValue: val } : { placeholder: val })
+  const [dates, setDates] = useState(
+    filled
+      ? [
+          { date: '05.08.2026', time: '20.00' },
+          { date: '06.08.2026', time: '19.00' },
+          { date: '08.08.2026', time: '20.00' },
+        ]
+      : [{ date: '', time: '' }],
+  )
+  const [locations, setLocations] = useState([filled ? 'GSP Stadium' : ''])
 
   const headerRight = (
     <span className="mr-auto ml-4 rounded-[10px] bg-field px-3 py-1 font-anon text-[11px] font-bold text-accent">
@@ -88,14 +96,14 @@ export default function CreateEvent({ mode = 'agent' }) {
       role={admin || report ? 'admin' : 'agent'}
       headerRight={headerRight}
     >
-      <div className="flex items-start gap-7 p-7">
+      <div className="flex flex-wrap items-start gap-7 p-7">
         <div className="flex w-[535px] flex-col gap-7">
           <section className="flex flex-col gap-4 rounded-[15px] border border-white/10 bg-card p-7">
             <p className="text-[18px] font-bold">Basic Information</p>
 
             <div className="flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-name">Event Name</label>
-              <input id="ev-name" defaultValue="Nicosia Football Tournament" className={inputCls} />
+              <input id="ev-name" {...dv('Nicosia Football Tournament')} className={inputCls} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -127,29 +135,64 @@ export default function CreateEvent({ mode = 'agent' }) {
               <span />
               {dates.map((d, i) => (
                 <Fragment key={i}>
-                  <input id={`ev-date-${i}`} defaultValue={d.date} className={inputCls} />
-                  <input defaultValue={d.time} className={inputCls} />
-                  {i === 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => setDates((ds) => [...ds, { date: '', time: '' }])}
-                      className="rounded-[8px] bg-field px-3 py-1.5 text-[11px] font-bold text-white hover:brightness-125"
-                    >
-                      Add Date
-                    </button>
-                  ) : (
-                    <span />
-                  )}
+                  <input id={`ev-date-${i}`} defaultValue={d.date} placeholder="05.08.2026" className={inputCls} />
+                  <input defaultValue={d.time} placeholder="20.00" className={inputCls} />
+                  <div className="flex gap-2">
+                    {i === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setDates((ds) => [...ds, { date: '', time: '' }])}
+                        className="rounded-[8px] bg-field px-3 py-1.5 text-[11px] font-bold text-white hover:brightness-125"
+                      >
+                        Add Date
+                      </button>
+                    ) : null}
+                    {dates.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setDates((ds) => ds.filter((_, j) => j !== i))}
+                        className="rounded-[8px] bg-[rgba(247,63,82,0.1)] px-3 py-1.5 text-[11px] font-bold text-[#f73f52] hover:brightness-125"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </Fragment>
               ))}
             </div>
 
-            <div className="grid grid-cols-[1fr_auto] items-end gap-4">
-              <div className="flex flex-col gap-2">
-                <label className={labelCls} htmlFor="ev-loc">Location</label>
-                <input id="ev-loc" defaultValue="GSP Stadium" className={inputCls} />
-              </div>
-              <SmallBtn>Add Location</SmallBtn>
+            <div className="flex flex-col gap-2">
+              <label className={labelCls} htmlFor="ev-loc">Location</label>
+              {locations.map((loc, i) => (
+                <div key={i} className="grid grid-cols-[1fr_auto] items-center gap-4">
+                  <input
+                    id={i === 0 ? 'ev-loc' : undefined}
+                    defaultValue={loc}
+                    placeholder="GSP Stadium"
+                    className={inputCls}
+                  />
+                  <div className="flex gap-2">
+                    {i === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setLocations((ls) => [...ls, ''])}
+                        className="rounded-[8px] bg-field px-3 py-1.5 text-[11px] font-bold text-white hover:brightness-125"
+                      >
+                        Add Location
+                      </button>
+                    ) : null}
+                    {locations.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setLocations((ls) => ls.filter((_, j) => j !== i))}
+                        className="rounded-[8px] bg-[rgba(247,63,82,0.1)] px-3 py-1.5 text-[11px] font-bold text-[#f73f52] hover:brightness-125"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -175,7 +218,7 @@ export default function CreateEvent({ mode = 'agent' }) {
             </div>
             <div className="mt-2 flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-fee">Participation Fee (€)</label>
-              <input id="ev-fee" defaultValue="15" className={inputCls} />
+              <input id="ev-fee" {...dv('15')} className={inputCls} />
             </div>
           </section>
         </div>
@@ -188,30 +231,30 @@ export default function CreateEvent({ mode = 'agent' }) {
               <textarea
                 id="ev-desc"
                 rows={3}
-                defaultValue="The biggest fixture in Cypriot football. This is the defining match of the Cyprus football calendar, drawing fans from across the island and beyond. The atmosphere is electric — arrive early."
+                {...dv('The biggest fixture in Cypriot football. This is the defining match of the Cyprus football calendar, drawing fans from across the island and beyond. The atmosphere is electric — arrive early.')}
                 className="w-full resize-none rounded-[8px] border border-white/20 bg-night px-3 py-2 text-[12px] leading-relaxed text-white outline-none focus:border-accent"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-max">Max Attendees (optional)</label>
-                <input id="ev-max" defaultValue="50" className={inputCls} />
+                <input id="ev-max" {...dv('50')} className={inputCls} />
               </div>
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-deadline">Last Registration Date</label>
-                <input id="ev-deadline" defaultValue="01.08.2025" className={inputCls} />
+                <input id="ev-deadline" {...dv('01.08.2025')} className={inputCls} />
               </div>
             </div>
             <div className="flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-bring">What Do They Bring</label>
-              <input id="ev-bring" defaultValue="Valid ID or Passport, Cash" className={inputCls} />
+              <input id="ev-bring" {...dv('Valid ID or Passport, Cash')} className={inputCls} />
             </div>
             <div className="flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-provide">What Will You Provide</label>
               <textarea
                 id="ev-provide"
                 rows={2}
-                defaultValue="Assigned Seating, Stadium-wide Security, Food & Beverage Stands, Medical Team On Site, Live Big-Screen Replays"
+                {...dv('Assigned Seating, Stadium-wide Security, Food & Beverage Stands, Medical Team On Site, Live Big-Screen Replays')}
                 className="w-full resize-none rounded-[8px] border border-white/20 bg-night px-3 py-2 text-[12px] leading-relaxed text-white outline-none focus:border-accent"
               />
             </div>

@@ -76,8 +76,8 @@ export default function EventScreen({ visitor = false }) {
         </button>
       </div>
 
-      <div className="flex items-start gap-6 p-7">
-        <div className="flex w-[610px] flex-col gap-5 font-mono">
+      <div className="flex flex-wrap items-start gap-6 p-7">
+        <div className="flex min-w-[420px] flex-[1.4] flex-col gap-5 font-mono">
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <table className="w-full text-left text-[13px]">
               <thead>
@@ -103,7 +103,7 @@ export default function EventScreen({ visitor = false }) {
           </section>
         </div>
 
-        <section className="flex w-[450px] flex-col gap-5 rounded-[12px] border border-white/10 bg-card p-6">
+        <section className="flex min-w-[360px] flex-1 flex-col gap-5 rounded-[12px] border border-white/10 bg-card p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-3">
               <p className="text-[16px] font-bold">{agentName}</p>

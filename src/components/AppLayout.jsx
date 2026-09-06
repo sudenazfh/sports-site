@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import avatar from '../assets/avatar.svg'
 
@@ -64,11 +64,17 @@ export default function AppLayout({ title, headerRight, visitor = false, role = 
   }
 
   const menu = MENUS[role]
+  const navigate = useNavigate()
   const [me, setMe] = useState(null)
 
   useEffect(() => {
     api('/me').then(setMe).catch(() => {})
   }, [])
+
+  async function logout() {
+    await api('/logout', { method: 'POST' }).catch(() => {})
+    navigate('/login')
+  }
 
   const displayName = me && me.role === role ? me.name : menu.name
 
@@ -103,6 +109,13 @@ export default function AppLayout({ title, headerRight, visitor = false, role = 
             </NavLink>
           ))}
         </nav>
+        <button
+          type="button"
+          onClick={logout}
+          className="mx-6 mt-auto mb-6 rounded-[10px] px-4 py-3 text-left text-[14px] font-bold text-[#f73f52] hover:bg-[rgba(247,63,82,0.1)]"
+        >
+          Log Out
+        </button>
       </aside>
 
       <div className="ml-[327px] flex min-h-screen flex-1 flex-col">

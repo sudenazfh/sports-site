@@ -31,8 +31,8 @@ const INCOME_ROWS = [
 export default function AgentIncome() {
   return (
     <AppLayout title="Income" role="agent">
-      <div className="flex items-start gap-7 p-7">
-        <div className="flex w-[880px] flex-col gap-6">
+      <div className="flex flex-wrap items-start gap-7 p-7">
+        <div className="flex min-w-[560px] flex-[1.8] flex-col gap-6">
           <div className="grid grid-cols-3 gap-6">
             <div className="rounded-[12px] border border-white/10 bg-card px-6 py-5">
               <p className="text-[24px] font-extrabold">€192.2k</p>
@@ -107,7 +107,7 @@ export default function AgentIncome() {
           </section>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6">
+        <div className="flex min-w-[340px] flex-1 flex-col gap-6">
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <div className="flex items-center justify-between pb-4">
               <p className="text-[14px] font-bold">Per Event Income</p>

@@ -41,8 +41,8 @@ const REVENUE_BY_CITY = [
 export default function AdminDashboard() {
   return (
     <AppLayout title="Dashboard" role="admin">
-      <div className="flex items-start gap-7 p-7">
-        <div className="flex w-[880px] flex-col gap-6">
+      <div className="flex flex-wrap items-start gap-7 p-7">
+        <div className="flex min-w-[560px] flex-[1.8] flex-col gap-6">
           <div className="grid grid-cols-4 gap-5">
             {STATS.map((s) => (
               <div key={s.label} className="rounded-[12px] border border-white/10 bg-card px-5 py-4">
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           </section>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6">
+        <div className="flex min-w-[340px] flex-1 flex-col gap-6">
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <p className="pb-2 text-[16px] font-bold">Pending Actions</p>
             <div className="divide-y divide-white/15">
