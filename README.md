@@ -1,6 +1,8 @@
 # Sports Site
 
-Kıbrıs'taki spor etkinlikleri için etkinlik platformu. Kullanıcılar etkinliklere kayıt olur, organizatörler (agent) etkinlik oluşturur, admin onaylar. Tasarım Figma'dan birebir kodlanmıştır.
+Kıbrıs'taki spor etkinlikleri için etkinlik platformu. Kullanıcılar etkinliklere kayıt olur, organizatörler (agent) etkinlik oluşturur, admin onaylar.
+
+🎨 Bu site, canım arkadaşım [Deniz](https://github.com/denizkizilbora0-blip)'in piksel piksel işlediği harika [Figma tasarımından](https://www.figma.com/design/MgIar0C2VDjADG8HG3i8kk) yola çıkılarak, tasarıma birebir sadık kalınarak kodlandı. Güzel görünen ne varsa onun emeği. 💜
 
 ## Kurulum
 
