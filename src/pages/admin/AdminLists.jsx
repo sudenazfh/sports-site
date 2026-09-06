@@ -81,7 +81,7 @@ export function AccountRequests() {
   const [query, setQuery] = useState('')
   const rows = [
     { id: 1, name: 'Famagusta Athletic Union', sub: 'Request Sent: 4 February 2024' },
-    { id: 2, name: 'İdil Derin', sub: 'Request Sent: 10 June 2025' },
+    { id: 2, name: 'İdil Derin', sub: 'Commission Change Request: 10 June 2025', kind: 'commission' },
     { id: 3, name: 'İnci Nakışçı', sub: 'Request Sent: 2 July 2026' },
   ].filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
 
@@ -91,7 +91,10 @@ export function AccountRequests() {
         <AdminSearchBar query={query} onQuery={setQuery} dropdowns={2} />
         {rows.map((r) => (
           <AdminRow key={r.id} title={r.name} subtitle={r.sub}>
-            <Link to="/admin/account-view" className={viewBtnCls}>
+            <Link
+              to={r.kind === 'commission' ? '/admin/account-request-view?kind=commission' : '/admin/account-request-view'}
+              className={viewBtnCls}
+            >
               View Info
             </Link>
           </AdminRow>
@@ -104,10 +107,10 @@ export function AccountRequests() {
 export function Accounts() {
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState([
-    { id: 1, name: 'Famagusta Athletic Union', sub: 'Agent Since: 1 January 2024', banned: false },
-    { id: 2, name: 'İdil Derin', sub: 'User Since: 11 June 2025', banned: false },
-    { id: 3, name: 'Kardelen Işık', sub: 'Agent BANNED By: Mehmet Demir', banned: true },
-    { id: 4, name: 'Sude Katırcıoğlu', sub: 'User Since: 11 June 2025', banned: false },
+    { id: 1, name: 'Famagusta Athletic Union', sub: 'Agent Since: 1 January 2024', banned: false, role: 'agent' },
+    { id: 2, name: 'İdil Derin', sub: 'User Since: 11 June 2025', banned: false, role: 'user' },
+    { id: 3, name: 'Kardelen Işık', sub: 'Agent BANNED By: Mehmet Demir', banned: true, role: 'agent' },
+    { id: 4, name: 'Sude Katırcıoğlu', sub: 'User Since: 11 June 2025', banned: false, role: 'user' },
   ])
 
   function load() {
@@ -121,6 +124,7 @@ export function Accounts() {
               ? `${u.role === 'agent' ? 'Agent' : 'User'} BANNED By: ${u.bannedBy ?? 'admin'}`
               : `${u.role === 'agent' ? 'Agent' : u.role === 'admin' ? 'Admin' : 'User'} Since: ${u.created}`,
             banned: !!u.banned,
+            role: u.role,
             live: true,
           })),
         ),
@@ -156,7 +160,7 @@ export function Accounts() {
             <button type="button" className={greyBtnCls}>
               Commission
             </button>
-            <Link to="/admin/account-view" className={viewBtnCls}>
+            <Link to={r.role === 'agent' ? '/admin/agent-view' : '/admin/user-view'} className={viewBtnCls}>
               View Info
             </Link>
           </AdminRow>

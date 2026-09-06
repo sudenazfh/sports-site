@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
+import { ConfirmModal } from '../../components/Modals.jsx'
 
 const INITIAL_PARTICIPANTS = [
   { id: 1, name: 'Hello Kitty', member: false, accepted: 'Accepted 2 hours ago', fee: '€22,5', attended: false },
@@ -14,13 +15,19 @@ const INITIAL_PENDING = [
   { id: 5, name: 'Azra Nakışçı', member: false, sent: 'Sent 2 hours ago' },
 ]
 
-export default function EventDetails() {
+export default function EventDetails({ admin = false }) {
   const navigate = useNavigate()
   const { id } = useParams()
   const [tab, setTab] = useState('participants')
   const [participants, setParticipants] = useState(INITIAL_PARTICIPANTS)
   const [pending, setPending] = useState(INITIAL_PENDING)
   const [query, setQuery] = useState('')
+  const [approving, setApproving] = useState(null)
+
+  function approveAttendance() {
+    setParticipants((xs) => xs.map((x) => (x.id === approving.id ? { ...x, attended: true } : x)))
+    setApproving(null)
+  }
 
   useEffect(() => {
     if (!id) return
@@ -61,7 +68,7 @@ export default function EventDetails() {
   )
 
   return (
-    <AppLayout title="My Events" role="agent">
+    <AppLayout title={admin ? 'Reports' : 'My Events'} role={admin ? 'admin' : 'agent'}>
       <div className="flex flex-col gap-5 p-7">
         <div className="flex items-center justify-between">
           <button
@@ -152,7 +159,12 @@ export default function EventDetails() {
                     ✓
                   </span>
                 ) : (
-                  <span className="size-9 rounded-[8px] bg-[rgba(123,136,255,0.1)]" />
+                  <button
+                    type="button"
+                    onClick={() => setApproving(p)}
+                    aria-label="Approve attendance"
+                    className="size-9 rounded-[8px] bg-[rgba(123,136,255,0.1)] hover:bg-[rgba(123,136,255,0.25)]"
+                  />
                 )}
                 <div className="flex-1">
                   <p className="text-[13px] font-bold">
@@ -205,6 +217,13 @@ export default function EventDetails() {
             </div>
           ))}
       </div>
+      {approving && (
+        <ConfirmModal
+          message={`Approve attendance for ${approving.name}?`}
+          onNo={() => setApproving(null)}
+          onYes={approveAttendance}
+        />
+      )}
     </AppLayout>
   )
 }

@@ -22,6 +22,9 @@ import EventScreen from './pages/EventScreen.jsx'
 import AgentProfile from './pages/AgentProfile.jsx'
 import AgentDashboard from './pages/agent/AgentDashboard.jsx'
 import AgentIncome from './pages/agent/AgentIncome.jsx'
+import AgentIncomeDetails from './pages/agent/AgentIncomeDetails.jsx'
+import AgentMemberDetail from './pages/agent/AgentMemberDetail.jsx'
+import AgentEventReviews from './pages/agent/AgentEventReviews.jsx'
 import CreateEvent from './pages/agent/CreateEvent.jsx'
 import AgentMyEvents from './pages/agent/AgentMyEvents.jsx'
 import AgentMembers from './pages/agent/AgentMembers.jsx'
@@ -32,6 +35,10 @@ import { AccountRequests, Accounts, EventRequests } from './pages/admin/AdminLis
 import SystemIncome from './pages/admin/SystemIncome.jsx'
 import AdminReports from './pages/admin/AdminReports.jsx'
 import AdminAccountView from './pages/admin/AdminAccountView.jsx'
+import AdminAccountRequestView from './pages/admin/AdminAccountRequestView.jsx'
+import AdminAccountReport from './pages/admin/AdminAccountReport.jsx'
+import AdminAgentView from './pages/admin/AdminAgentView.jsx'
+import AdminUserView from './pages/admin/AdminUserView.jsx'
 
 export default function App() {
   return (
@@ -68,6 +75,10 @@ export default function App() {
         <Route path="/agent/browse" element={<Browse role="agent" />} />
         <Route path="/agent/dashboard" element={<AgentDashboard />} />
         <Route path="/agent/income" element={<AgentIncome />} />
+        <Route path="/agent/income/events" element={<AgentIncomeDetails kind="events" />} />
+        <Route path="/agent/income/members" element={<AgentIncomeDetails kind="members" />} />
+        <Route path="/agent/members/:id" element={<AgentMemberDetail />} />
+        <Route path="/agent/event-reviews/:id" element={<AgentEventReviews />} />
         <Route path="/agent/create-event" element={<CreateEvent />} />
         <Route path="/agent/my-events" element={<AgentMyEvents />} />
         <Route path="/agent/members" element={<AgentMembers />} />
@@ -89,6 +100,12 @@ export default function App() {
         <Route path="/admin/event-view" element={<CreateEvent mode="admin" />} />
         <Route path="/admin/event-view/:id" element={<CreateEvent mode="admin" />} />
         <Route path="/admin/account-view" element={<AdminAccountView />} />
+        <Route path="/admin/account-request-view" element={<AdminAccountRequestView />} />
+        <Route path="/admin/account-report" element={<AdminAccountReport />} />
+        <Route path="/admin/agent-view" element={<AdminAgentView />} />
+        <Route path="/admin/user-view" element={<AdminUserView />} />
+        <Route path="/admin/event-participants" element={<EventDetails admin />} />
+        <Route path="/admin/event-reviews/:id" element={<AgentEventReviews admin />} />
         <Route path="/admin/profile" element={<ProfileSettings role="admin" />} />
       </Routes>
     </BrowserRouter>

@@ -106,6 +106,25 @@ app.post('/api/events/:id/register', auth, (req, res) => {
   res.json(reg)
 })
 
+app.delete('/api/events/:id/registration', auth, (req, res) => {
+  const db = getDb()
+  const e = db.events.find((x) => x.id === Number(req.params.id))
+  if (!e) return res.status(404).json({ error: 'Event not found' })
+  const i = db.registrations.findIndex((r) => r.userId === req.user.id && r.eventId === e.id)
+  if (i === -1) return res.status(404).json({ error: 'Not registered' })
+  db.registrations.splice(i, 1)
+  if (e.taken > 0) e.taken--
+  db.notifications.push({
+    id: nextId(),
+    userId: req.user.id,
+    text: `Your registration for ${e.name} was cancelled. Refund will be processed.`,
+    time: 'just now',
+    dot: 'red',
+  })
+  save()
+  res.json({ ok: true })
+})
+
 app.get('/api/my/registrations', auth, (req, res) => {
   const db = getDb()
   res.json(
@@ -182,13 +201,17 @@ app.put('/api/events/:id/review', auth, (req, res) => {
   const rating = Number(req.body.rating)
   const text = (req.body.text || '').trim()
 
-  // TODO(human): validate the review before saving.
-  // Decide the rules and return res.status(400).json({ error: '...' }) when violated.
-  // Available: rating (Number), text (trimmed string), db.registrations, req.user.id, eventId
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
+    return res.status(400).json({ error: 'Rating must be 1-5' })
+  if (text.length > 1000) return res.status(400).json({ error: 'Review too long' })
+  const attended = db.registrations.some(
+    (r) => r.userId === req.user.id && r.eventId === eventId && r.status === 'REGISTERED',
+  )
+  if (!attended) return res.status(400).json({ error: 'You can only review events you attended' })
 
   const rev = db.reviews.find((x) => x.userId === req.user.id && x.eventId === eventId)
   if (rev) Object.assign(rev, { rating, text })
-  else db.reviews.push({ id: nextId(), userId: req.user.id, eventId, rating, text })
+  else db.reviews.push({ id: nextId(), userId: req.user.id, eventId, rating, text, date: new Date().toDateString() })
   save()
   res.json({ eventId, rating, text })
 })
@@ -260,6 +283,22 @@ app.get('/api/agent/events/:id/participants', auth, requireRole('agent'), (req, 
     .filter((r) => r.eventId === Number(req.params.id))
     .map((r) => ({ ...r, user: db.users.find((u) => u.id === r.userId)?.name ?? 'Unknown' }))
   res.json(regs)
+})
+
+app.get('/api/agent/events/:id/reviews', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  res.json(
+    db.reviews
+      .filter((r) => r.eventId === Number(req.params.id))
+      .map((r) => ({
+        id: r.id,
+        user: db.users.find((u) => u.id === r.userId)?.name ?? 'Unknown',
+        member: true,
+        date: r.date ?? '',
+        rating: r.rating,
+        text: r.text,
+      })),
+  )
 })
 
 app.post('/api/registrations/:id/:action', auth, requireRole('agent'), (req, res) => {

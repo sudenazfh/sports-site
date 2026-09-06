@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import AppLayout from '../../components/AppLayout.jsx'
 
 const MEMBERS = [
@@ -63,12 +64,12 @@ export default function AgentMembers() {
                 <p className="text-[13px] font-bold">{m.name}</p>
                 <p className="text-[11px] text-white/60">Member Since: {m.since}</p>
               </div>
-              <button
-                type="button"
+              <Link
+                to={`/agent/members/${m.id}`}
                 className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-4 py-1.5 text-[11px] font-bold text-accent hover:brightness-125"
               >
                 View Member
-              </button>
+              </Link>
               <button
                 type="button"
                 onClick={() => setMembers((ms) => ms.filter((x) => x.id !== m.id))}

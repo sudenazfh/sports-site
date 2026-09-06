@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
+import { ConfirmModal, ReasonModal } from '../../components/Modals.jsx'
 
 const EVENT_TYPES = [
   { id: 'free', title: 'Free Event', desc: 'No payment is required' },
@@ -33,6 +34,7 @@ export default function CreateEvent({ mode = 'agent' }) {
   const { id: reviewId } = useParams()
   const [type, setType] = useState('paid-all')
   const [saveError, setSaveError] = useState(null)
+  const [modal, setModal] = useState(null) // 'reject' | 'cancel' | 'reject-report' | 'publish'
 
   async function decide(action) {
     setSaveError(null)
@@ -221,14 +223,14 @@ export default function CreateEvent({ mode = 'agent' }) {
               <div className="flex items-center justify-around">
                 <button
                   type="button"
-                  onClick={() => (admin ? decide('reject') : saveEvent('draft'))}
+                  onClick={() => (admin ? setModal('reject') : saveEvent('draft'))}
                   className="rounded-[10px] bg-[rgba(247,63,82,0.1)] px-8 py-2.5 text-[14px] font-bold text-[#f73f52] hover:brightness-125"
                 >
                   {admin ? 'Reject Event' : 'Save As Draft'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => (admin ? decide('approve') : saveEvent('pending'))}
+                  onClick={() => (admin ? decide('approve') : setModal('publish'))}
                   className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-8 py-2.5 text-[14px] font-bold text-accent hover:brightness-125"
                 >
                   {admin ? 'Approve Event' : 'Publish Event'}
@@ -273,12 +275,14 @@ export default function CreateEvent({ mode = 'agent' }) {
             <div className="flex justify-end gap-4">
               <button
                 type="button"
+                onClick={() => setModal('reject-report')}
                 className="rounded-[8px] bg-field px-6 py-2.5 font-anon text-[13px] font-bold text-white hover:brightness-125"
               >
                 REJECT REPORT
               </button>
               <button
                 type="button"
+                onClick={() => setModal('cancel')}
                 className="rounded-[8px] bg-[rgba(247,63,82,0.15)] px-6 py-2.5 font-anon text-[13px] font-bold text-[#f73f52] hover:brightness-125"
               >
                 CANCEL EVENT
@@ -318,6 +322,49 @@ export default function CreateEvent({ mode = 'agent' }) {
           </div>
         )}
       </div>
+      {modal === 'reject' && (
+        <ReasonModal
+          title="Reason of Reject"
+          onCancel={() => setModal(null)}
+          onSend={() => {
+            setModal(null)
+            decide('reject')
+          }}
+        />
+      )}
+      {modal === 'reject-report' && (
+        <ReasonModal
+          title="Reason of Reject"
+          onCancel={() => setModal(null)}
+          onSend={() => {
+            setModal(null)
+            navigate('/admin/reports')
+          }}
+        />
+      )}
+      {modal === 'cancel' && (
+        <ReasonModal
+          title="Reason of Cancel"
+          onCancel={() => setModal(null)}
+          onSend={() => {
+            setModal(null)
+            navigate('/admin/reports')
+          }}
+        />
+      )}
+      {modal === 'publish' && (
+        <ConfirmModal
+          notice="Commission Notice: A %10 platform commission will be deducted from each paid registration for this event."
+          message="Do you want to publish this event?"
+          noLabel="Cancel"
+          yesLabel="Publish Event"
+          onNo={() => setModal(null)}
+          onYes={() => {
+            setModal(null)
+            saveEvent('pending')
+          }}
+        />
+      )}
     </AppLayout>
   )
 }

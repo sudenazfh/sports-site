@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AppLayout from '../components/AppLayout.jsx'
+import { DocumentModal } from '../components/Modals.jsx'
 import Toggle from '../components/Toggle.jsx'
 import avatar from '../assets/avatar.svg'
 
@@ -28,6 +29,7 @@ function Field({ label, id, defaultValue }) {
 
 export default function ProfileSettings({ role = 'user' }) {
   const [prefs, setPrefs] = useState(PREFS)
+  const [docModal, setDocModal] = useState(null)
 
   return (
     <AppLayout title="Profile & Settings" role={role}>
@@ -65,16 +67,22 @@ export default function ProfileSettings({ role = 'user' }) {
           </section>
 
           <div className="flex w-[230px] flex-col gap-3">
-            {['View ID Document', 'View Medical Certificate', 'View Parent Consent'].map((d) => (
+            {[
+              ['View ID Document', 'ID Document'],
+              ['View Medical Certificate', 'Medical Certificate'],
+              ['View Parent Consent', 'Parent Consent'],
+            ].map(([label, doc]) => (
               <button
-                key={d}
+                key={label}
                 type="button"
+                onClick={() => setDocModal(doc)}
                 className="rounded-[10px] bg-field py-2.5 text-[14px] font-bold text-white/90 hover:brightness-125"
               >
-                {d}
+                {label}
               </button>
             ))}
           </div>
+          {docModal && <DocumentModal title={docModal} onClose={() => setDocModal(null)} />}
         </div>
 
         <section className="flex flex-1 flex-col rounded-[15px] border border-white/10 bg-card p-8">

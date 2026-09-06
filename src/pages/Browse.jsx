@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import AppLayout from '../components/AppLayout.jsx'
 import EventCard from '../components/EventCard.jsx'
-import FilterBar from '../components/FilterBar.jsx'
+import FilterBar, { sortEvents } from '../components/FilterBar.jsx'
 import { favouriteEvents } from '../data/mock.js'
 
 export default function Browse({ visitor = false, role = 'user' }) {
   const [freeOnly, setFreeOnly] = useState(false)
   const [query, setQuery] = useState('')
+  const [type, setType] = useState('All')
+  const [loc, setLoc] = useState('All')
+  const [sort, setSort] = useState('Most Popular')
   const [source, setSource] = useState(favouriteEvents)
   const [favIds, setFavIds] = useState(new Set())
 
@@ -33,10 +36,15 @@ export default function Browse({ visitor = false, role = 'user' }) {
     } catch {}
   }
 
-  const shown = source.filter(
-    (e) =>
-      (!freeOnly || e.price === 0) &&
-      e.name.toLowerCase().includes(query.toLowerCase()),
+  const shown = sortEvents(
+    source.filter(
+      (e) =>
+        (!freeOnly || e.price === 0) &&
+        (type === 'All' || e.category === type) &&
+        (loc === 'All' || e.city === loc) &&
+        e.name.toLowerCase().includes(query.toLowerCase()),
+    ),
+    sort,
   )
 
   const eventPath = (id) => (visitor ? `/visitor/event/${id}` : `/event/${id}`)
@@ -52,6 +60,12 @@ export default function Browse({ visitor = false, role = 'user' }) {
         onQuery={setQuery}
         freeOnly={freeOnly}
         onFreeOnly={setFreeOnly}
+        type={type}
+        onType={setType}
+        loc={loc}
+        onLoc={setLoc}
+        sort={sort}
+        onSort={setSort}
         count={shown.length}
         placeholder="Search for events or agents.."
         extraFilters={role === 'admin' ? ['Status'] : []}

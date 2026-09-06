@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import AppLayout from '../../components/AppLayout.jsx'
 
 const MONTHLY = [
@@ -110,7 +111,9 @@ export default function AgentIncome() {
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <div className="flex items-center justify-between pb-4">
               <p className="text-[14px] font-bold">Per Event Income</p>
-              <span className="text-[12px] font-bold text-accent">View All →</span>
+              <Link to="/agent/income/events" className="text-[12px] font-bold text-accent hover:brightness-125">
+                View All →
+              </Link>
             </div>
             <div className="divide-y divide-white/15">
               {PER_EVENT.map((e) => (
@@ -131,7 +134,9 @@ export default function AgentIncome() {
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <div className="flex items-center justify-between pb-4">
               <p className="text-[14px] font-bold">Monthly Membership Income</p>
-              <span className="text-[12px] font-bold text-accent">View All →</span>
+              <Link to="/agent/income/members" className="text-[12px] font-bold text-accent hover:brightness-125">
+                View All →
+              </Link>
             </div>
             <div className="flex items-center justify-between border-t border-white/15 py-3.5">
               <div>

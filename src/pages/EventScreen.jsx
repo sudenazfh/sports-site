@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api.js'
 import AppLayout from '../components/AppLayout.jsx'
+import { LoginRequiredModal, ReasonModal } from '../components/Modals.jsx'
 import heartFav from '../assets/icon-heart-fav.svg'
 import { categoryImage } from '../data/mock.js'
 
@@ -9,11 +10,27 @@ export default function EventScreen({ visitor = false }) {
   const navigate = useNavigate()
   const { id = 1 } = useParams()
   const [event, setEvent] = useState(null)
+  const [registered, setRegistered] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [reporting, setReporting] = useState(false)
   const loginOr = (path) => (visitor ? '/login' : path)
 
   useEffect(() => {
     api(`/events/${id}`).then(setEvent).catch(() => {})
-  }, [id])
+    if (!visitor)
+      api('/my/registrations')
+        .then((rs) => setRegistered(rs.some((r) => r.eventId === Number(id))))
+        .catch(() => {})
+  }, [id, visitor])
+
+  async function cancelRegistration() {
+    try {
+      await api(`/events/${id}/registration`, { method: 'DELETE' })
+      setRegistered(false)
+      setEvent((e) => ({ ...e, taken: Math.max(0, e.taken - 1) }))
+    } catch {}
+    setConfirmCancel(false)
+  }
 
   if (!event) {
     return (
@@ -52,6 +69,7 @@ export default function EventScreen({ visitor = false }) {
         </div>
         <button
           type="button"
+          onClick={() => setReporting(true)}
           className="absolute right-8 bottom-6 rounded-[15px] bg-[rgba(247,63,82,0.2)] px-4 py-1.5 font-anon text-[12px] font-bold text-[#f73f52] hover:brightness-125"
         >
           REPORT EVENT
@@ -127,14 +145,70 @@ export default function EventScreen({ visitor = false }) {
               <div className="h-full rounded bg-accent" style={{ width: `${pct}%` }} />
             </div>
           </div>
-          <Link
-            to={loginOr(`/checkout/${event.id}`)}
-            className="self-center rounded-[10px] bg-field px-8 py-2.5 font-serif text-[15px] font-bold text-white hover:bg-accent hover:text-night"
-          >
-            REGISTER NOW
-          </Link>
+          {registered ? (
+            <span className="self-center rounded-[10px] border border-accent/40 bg-[rgba(123,136,255,0.15)] px-10 py-2.5 font-serif text-[15px] font-bold text-accent">
+              PAID
+            </span>
+          ) : (
+            <Link
+              to={loginOr(`/checkout/${event.id}`)}
+              className="self-center rounded-[10px] bg-field px-8 py-2.5 font-serif text-[15px] font-bold text-white hover:bg-accent hover:text-night"
+            >
+              REGISTER NOW
+            </Link>
+          )}
         </section>
       </div>
+      {registered && (
+        <div className="flex justify-end px-7 pb-7">
+          <button
+            type="button"
+            onClick={() => setConfirmCancel(true)}
+            className="w-[310px] rounded-[10px] border border-white/20 bg-card py-2.5 font-serif text-[15px] font-bold text-white hover:border-[#f73f52] hover:text-[#f73f52]"
+          >
+            CANCEL REGISTRATION
+          </button>
+        </div>
+      )}
+      {reporting &&
+        (visitor ? (
+          <LoginRequiredModal onClose={() => setReporting(false)} />
+        ) : (
+          <ReasonModal
+            title="Reason of Report"
+            onCancel={() => setReporting(false)}
+            onSend={() => setReporting(false)}
+          />
+        ))}
+      {confirmCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="flex w-[820px] flex-col gap-8 rounded-[15px] border border-white/10 bg-card p-10">
+            <p className="text-[13px] leading-relaxed text-white/80">
+              Notice: Users are allowed to ask for a %50 refund only if there are less than 24 hours until the
+              event starts, and a full refund if there are more than 24 hours until the event begins when they
+              cancel their participation. If an event is cancelled, the users will receive a full refund
+              regardless of the cancellation time.
+            </p>
+            <p className="text-center text-[14px]">Are you sure that you want to cancel your registiration?</p>
+            <div className="flex justify-center gap-6">
+              <button
+                type="button"
+                onClick={() => setConfirmCancel(false)}
+                className="w-[135px] rounded-[8px] bg-night py-2.5 text-[13px] font-bold text-white hover:brightness-150"
+              >
+                NO
+              </button>
+              <button
+                type="button"
+                onClick={cancelRegistration}
+                className="w-[135px] rounded-[8px] bg-[rgba(123,136,255,0.2)] py-2.5 text-[13px] font-bold text-accent hover:brightness-125"
+              >
+                YES
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }

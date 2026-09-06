@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AppLayout from '../components/AppLayout.jsx'
 import EventCard from '../components/EventCard.jsx'
+import { LoginRequiredModal, ReasonModal } from '../components/Modals.jsx'
 import { events } from '../data/mock.js'
 
 export default function AgentProfile({ visitor = false }) {
   const navigate = useNavigate()
+  const [reporting, setReporting] = useState(false)
   const agentEvents = events.slice(0, 2)
   const loginOr = (path) => (visitor ? '/login' : path)
 
@@ -21,10 +24,21 @@ export default function AgentProfile({ visitor = false }) {
           </button>
           <button
             type="button"
+            onClick={() => setReporting(true)}
             className="rounded-[15px] bg-[rgba(247,63,82,0.15)] px-4 py-1.5 font-anon text-[12px] font-bold text-[#f73f52] hover:brightness-125"
           >
             REPORT AGENT
           </button>
+          {reporting &&
+            (visitor ? (
+              <LoginRequiredModal onClose={() => setReporting(false)} />
+            ) : (
+              <ReasonModal
+                title="Reason of Report"
+                onCancel={() => setReporting(false)}
+                onSend={() => setReporting(false)}
+              />
+            ))}
         </div>
         <h1 className="mt-8 text-[36px] font-extrabold">Famagusta Athletic Union</h1>
         <span className="mt-1 inline-block rounded-[10px] bg-[rgba(123,136,255,0.15)] px-3 py-0.5 font-anon text-[11px] text-accent">
