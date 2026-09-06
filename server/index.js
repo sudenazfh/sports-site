@@ -1,0 +1,390 @@
+import express from 'express'
+import cookieParser from 'cookie-parser'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { getDb, nextId, save } from './db.js'
+
+const app = express()
+app.use(express.json())
+app.use(cookieParser())
+
+// ponytail: sabit dev secret — canlıya çıkarken ortam değişkenine taşı
+const JWT_SECRET = process.env.JWT_SECRET || 'sports-site-dev-secret'
+const COOKIE = 'sports_token'
+
+function publicUser(u) {
+  const { password, ...rest } = u
+  return rest
+}
+
+function auth(req, res, next) {
+  const token = req.cookies[COOKIE]
+  if (!token) return res.status(401).json({ error: 'Not logged in' })
+  try {
+    req.user = getDb().users.find((u) => u.id === jwt.verify(token, JWT_SECRET).id)
+    if (!req.user) throw new Error()
+    next()
+  } catch {
+    res.status(401).json({ error: 'Invalid session' })
+  }
+}
+
+// ---- Auth ----
+app.post('/api/register', (req, res) => {
+  const { name, email, password } = req.body
+  if (!name || !email || !password) return res.status(400).json({ error: 'Missing fields' })
+  const db = getDb()
+  if (db.users.some((u) => u.email === email)) return res.status(409).json({ error: 'Email already registered' })
+  const user = {
+    id: nextId(),
+    role: 'user',
+    name,
+    email,
+    password: bcrypt.hashSync(password, 10),
+    created: new Date().toISOString().slice(0, 10),
+  }
+  db.users.push(user)
+  save()
+  res.json(publicUser(user))
+})
+
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body
+  const user = getDb().users.find((u) => u.email === email)
+  if (!user || !bcrypt.compareSync(password || '', user.password))
+    return res.status(401).json({ error: 'Wrong email or password' })
+  const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
+  res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax' })
+  res.json(publicUser(user))
+})
+
+app.post('/api/logout', (req, res) => {
+  res.clearCookie(COOKIE)
+  res.json({ ok: true })
+})
+
+app.get('/api/me', auth, (req, res) => res.json(publicUser(req.user)))
+
+// ---- Events ----
+app.get('/api/events', (req, res) => {
+  res.json(getDb().events.filter((e) => e.status === 'active'))
+})
+
+app.get('/api/events/:id', (req, res) => {
+  const e = getDb().events.find((x) => x.id === Number(req.params.id))
+  if (!e) return res.status(404).json({ error: 'Event not found' })
+  const agent = getDb().users.find((u) => u.id === e.agentId)
+  res.json({ ...e, agent: agent ? publicUser(agent) : null })
+})
+
+// ---- Registration (sahte ödeme: anında completed) ----
+app.post('/api/events/:id/register', auth, (req, res) => {
+  const db = getDb()
+  const e = db.events.find((x) => x.id === Number(req.params.id))
+  if (!e) return res.status(404).json({ error: 'Event not found' })
+  if (e.taken >= e.capacity) return res.status(400).json({ error: 'Event is full' })
+  if (db.registrations.some((r) => r.userId === req.user.id && r.eventId === e.id))
+    return res.status(409).json({ error: 'Already registered' })
+  e.taken++
+  const reg = {
+    id: nextId(),
+    userId: req.user.id,
+    eventId: e.id,
+    status: 'REGISTERED',
+    paid: e.price,
+    date: new Date().toDateString(),
+  }
+  db.registrations.push(reg)
+  db.notifications.push({
+    id: nextId(),
+    userId: req.user.id,
+    text: `Registered to ${e.name} successfully`,
+    time: 'just now',
+    dot: 'blue',
+  })
+  save()
+  res.json(reg)
+})
+
+app.get('/api/my/registrations', auth, (req, res) => {
+  const db = getDb()
+  res.json(
+    db.registrations
+      .filter((r) => r.userId === req.user.id)
+      .map((r) => ({ ...r, event: db.events.find((e) => e.id === r.eventId) })),
+  )
+})
+
+// Dashboard: kayıtlar + üyelikler + işlem geçmişi tek çağrıda
+app.get('/api/my/dashboard', auth, (req, res) => {
+  const db = getDb()
+  const regs = db.registrations
+    .filter((r) => r.userId === req.user.id)
+    .map((r) => ({ ...r, event: db.events.find((e) => e.id === r.eventId) }))
+  const memberships = db.memberships
+    .filter((m) => m.userId === req.user.id)
+    .map((m) => {
+      const agent = db.users.find((u) => u.id === m.agentId)
+      return { ...m, agentName: agent?.orgName || agent?.name, agentType: agent?.agentType }
+    })
+  const transactions = regs.map((r) => ({
+    id: r.id,
+    date: r.date,
+    type: r.paid === 0 ? 'Event (Free)' : 'Event',
+    to: r.event?.name ?? 'Unknown event',
+    amount: `€${r.paid}.00`,
+    status: 'COMPLETED',
+  }))
+  res.json({ registrations: regs, memberships, transactions })
+})
+
+app.get('/api/my/notifications', auth, (req, res) => {
+  res.json(getDb().notifications.filter((n) => n.userId === req.user.id).reverse())
+})
+
+// ---- Favourites (toggle) ----
+app.post('/api/events/:id/favourite', auth, (req, res) => {
+  const db = getDb()
+  const eventId = Number(req.params.id)
+  if (!db.events.some((e) => e.id === eventId)) return res.status(404).json({ error: 'Event not found' })
+  const i = db.favourites.findIndex((f) => f.userId === req.user.id && f.eventId === eventId)
+  if (i === -1) db.favourites.push({ userId: req.user.id, eventId })
+  else db.favourites.splice(i, 1)
+  save()
+  res.json({ fav: i === -1 })
+})
+
+app.get('/api/my/favourites', auth, (req, res) => {
+  const db = getDb()
+  const ids = db.favourites.filter((f) => f.userId === req.user.id).map((f) => f.eventId)
+  res.json(db.events.filter((e) => ids.includes(e.id)))
+})
+
+// ---- Attended events + reviews ----
+// ponytail: "attended" = kayıtlı olduğu tüm etkinlikler — gerçek tarih kontrolü yok,
+// event.date serbest metin; tarih ISO'ya geçince Date karşılaştırması ekle
+app.get('/api/my/attended', auth, (req, res) => {
+  const db = getDb()
+  res.json(
+    db.registrations
+      .filter((r) => r.userId === req.user.id && r.status === 'REGISTERED')
+      .map((r) => {
+        const e = db.events.find((x) => x.id === r.eventId)
+        const rev = db.reviews.find((x) => x.userId === req.user.id && x.eventId === r.eventId)
+        return { id: e.id, name: e.name, date: e.date, city: e.city, rating: rev?.rating ?? 0, review: rev?.text ?? null }
+      }),
+  )
+})
+
+app.put('/api/events/:id/review', auth, (req, res) => {
+  const db = getDb()
+  const eventId = Number(req.params.id)
+  const rating = Number(req.body.rating)
+  const text = (req.body.text || '').trim()
+
+  // TODO(human): validate the review before saving.
+  // Decide the rules and return res.status(400).json({ error: '...' }) when violated.
+  // Available: rating (Number), text (trimmed string), db.registrations, req.user.id, eventId
+
+  const rev = db.reviews.find((x) => x.userId === req.user.id && x.eventId === eventId)
+  if (rev) Object.assign(rev, { rating, text })
+  else db.reviews.push({ id: nextId(), userId: req.user.id, eventId, rating, text })
+  save()
+  res.json({ eventId, rating, text })
+})
+
+app.delete('/api/events/:id/review', auth, (req, res) => {
+  const db = getDb()
+  const i = db.reviews.findIndex((x) => x.userId === req.user.id && x.eventId === Number(req.params.id))
+  if (i !== -1) db.reviews.splice(i, 1)
+  save()
+  res.json({ ok: true })
+})
+
+function requireRole(role) {
+  return (req, res, next) => {
+    if (req.user.role !== role) return res.status(403).json({ error: 'Forbidden' })
+    next()
+  }
+}
+
+// ---- Agent: etkinlik CRUD ----
+app.get('/api/agent/events', auth, requireRole('agent'), (req, res) => {
+  res.json(getDb().events.filter((e) => e.agentId === req.user.id))
+})
+
+app.post('/api/agent/events', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  const { name, category, date, city, location, capacity, price, description, status } = req.body
+  if (!name) return res.status(400).json({ error: 'Event name required' })
+  const event = {
+    id: nextId(),
+    agentId: req.user.id,
+    name,
+    category: (category || 'FOOTBALL').toUpperCase(),
+    date: date || 'TBA',
+    city: city || 'Nicosia',
+    location: location || 'TBA',
+    taken: 0,
+    capacity: Number(capacity) || 50,
+    price: Number(price) || 0,
+    status: status === 'draft' ? 'draft' : 'pending', // admin onayına düşer
+    description: description || '',
+  }
+  db.events.push(event)
+  save()
+  res.json(event)
+})
+
+app.put('/api/agent/events/:id', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  const e = db.events.find((x) => x.id === Number(req.params.id) && x.agentId === req.user.id)
+  if (!e) return res.status(404).json({ error: 'Event not found' })
+  Object.assign(e, req.body, { id: e.id, agentId: e.agentId })
+  save()
+  res.json(e)
+})
+
+app.delete('/api/agent/events/:id', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  const i = db.events.findIndex((x) => x.id === Number(req.params.id) && x.agentId === req.user.id)
+  if (i === -1) return res.status(404).json({ error: 'Event not found' })
+  db.events.splice(i, 1)
+  save()
+  res.json({ ok: true })
+})
+
+app.get('/api/agent/events/:id/participants', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  const regs = db.registrations
+    .filter((r) => r.eventId === Number(req.params.id))
+    .map((r) => ({ ...r, user: db.users.find((u) => u.id === r.userId)?.name ?? 'Unknown' }))
+  res.json(regs)
+})
+
+app.post('/api/registrations/:id/:action', auth, requireRole('agent'), (req, res) => {
+  if (!['accept', 'reject', 'remove'].includes(req.params.action))
+    return res.status(400).json({ error: 'Unknown action' })
+  const db = getDb()
+  const i = db.registrations.findIndex((r) => r.id === Number(req.params.id))
+  if (i === -1) return res.status(404).json({ error: 'Registration not found' })
+  const reg = db.registrations[i]
+  if (req.params.action === 'accept') reg.status = 'REGISTERED'
+  else {
+    const event = db.events.find((e) => e.id === reg.eventId)
+    if (event && reg.status === 'REGISTERED') event.taken = Math.max(0, event.taken - 1)
+    db.registrations.splice(i, 1)
+  }
+  save()
+  res.json({ ok: true })
+})
+
+// ---- Üyelik satın alma (sahte ödeme) ----
+app.post('/api/agents/:id/join', auth, (req, res) => {
+  const db = getDb()
+  const agent = db.users.find((u) => u.id === Number(req.params.id) && u.role === 'agent')
+  if (!agent) return res.status(404).json({ error: 'Agent not found' })
+  if (db.memberships.some((m) => m.userId === req.user.id && m.agentId === agent.id))
+    return res.status(409).json({ error: 'Already a member' })
+  const m = {
+    id: nextId(),
+    userId: req.user.id,
+    agentId: agent.id,
+    fee: agent.membershipFee ?? 12,
+    expires: 'expires in 30 days',
+    status: 'ACTIVE',
+  }
+  db.memberships.push(m)
+  db.notifications.push({
+    id: nextId(),
+    userId: req.user.id,
+    text: `Acceptance: Your membership for ${agent.orgName ?? agent.name} has been confirmed`,
+    time: 'just now',
+    dot: 'blue',
+  })
+  save()
+  res.json(m)
+})
+
+// ---- Mesajlaşma ----
+app.get('/api/my/conversations', auth, (req, res) => {
+  const db = getDb()
+  const mine = db.conversations.filter(
+    (c) => c.userId === req.user.id || c.agentId === req.user.id,
+  )
+  res.json(
+    mine.map((c) => {
+      const otherId = c.userId === req.user.id ? c.agentId : c.userId
+      const other = db.users.find((u) => u.id === otherId)
+      return {
+        id: c.id,
+        name: other?.orgName ?? other?.name ?? 'Unknown',
+        messages: c.messages.map((m) => ({ ...m, me: m.from === req.user.id })),
+      }
+    }),
+  )
+})
+
+app.post('/api/conversations/:id/messages', auth, (req, res) => {
+  const db = getDb()
+  const c = db.conversations.find(
+    (x) => x.id === Number(req.params.id) && (x.userId === req.user.id || x.agentId === req.user.id),
+  )
+  if (!c) return res.status(404).json({ error: 'Conversation not found' })
+  const text = (req.body.text || '').trim()
+  if (!text) return res.status(400).json({ error: 'Empty message' })
+  const msg = { id: nextId(), from: req.user.id, text, time: 'just now' }
+  c.messages.push(msg)
+  save()
+  res.json({ ...msg, me: true })
+})
+
+// ---- Admin ----
+app.get('/api/admin/pending-events', auth, requireRole('admin'), (req, res) => {
+  const db = getDb()
+  res.json(
+    db.events
+      .filter((e) => e.status === 'pending')
+      .map((e) => ({ ...e, agentName: db.users.find((u) => u.id === e.agentId)?.orgName })),
+  )
+})
+
+app.post('/api/admin/events/:id/:action', auth, requireRole('admin'), (req, res) => {
+  if (!['approve', 'reject'].includes(req.params.action))
+    return res.status(400).json({ error: 'Unknown action' })
+  const db = getDb()
+  const e = db.events.find((x) => x.id === Number(req.params.id))
+  if (!e) return res.status(404).json({ error: 'Event not found' })
+  e.status = req.params.action === 'approve' ? 'active' : 'draft'
+  db.notifications.push({
+    id: nextId(),
+    userId: e.agentId,
+    text:
+      req.params.action === 'approve'
+        ? `Event Approved: ${e.name} is now live`
+        : `Event Rejected: ${e.name} has been sent back to drafts`,
+    time: 'just now',
+    dot: req.params.action === 'approve' ? 'blue' : 'red',
+  })
+  save()
+  res.json(e)
+})
+
+app.get('/api/admin/accounts', auth, requireRole('admin'), (req, res) => {
+  res.json(getDb().users.map(({ password, ...u }) => u))
+})
+
+app.post('/api/admin/accounts/:id/:action', auth, requireRole('admin'), (req, res) => {
+  if (!['ban', 'unban'].includes(req.params.action))
+    return res.status(400).json({ error: 'Unknown action' })
+  const db = getDb()
+  const u = db.users.find((x) => x.id === Number(req.params.id))
+  if (!u) return res.status(404).json({ error: 'Account not found' })
+  u.banned = req.params.action === 'ban'
+  u.bannedBy = u.banned ? req.user.name : undefined
+  save()
+  res.json({ ok: true })
+})
+
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`))

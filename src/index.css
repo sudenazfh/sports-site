@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600;700&family=Cousine:wght@400;700&family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-night: #0d101d;
+  --color-card: #101528;
+  --color-field: #151b34;
+  --color-accent: #a7aff5;
+  --color-glow: rgba(123, 136, 255, 0.25);
+  --font-serif: 'Libre Caslon Text', serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Cousine', monospace;
+  --font-anon: 'Anonymous Pro', monospace;
+}
+
+body {
+  background-color: var(--color-night);
+  color: #fff;
+  font-family: var(--font-sans);
+}
