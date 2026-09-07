@@ -187,10 +187,11 @@ export default function AgentProfileSettings() {
           <section className="flex flex-col gap-4 rounded-[15px] border border-white/10 bg-card p-8">
             <p className="font-mono text-[13px] font-bold uppercase">Portal Membership</p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              <Field label="Type" id="pm-type" defaultValue="Association" editable={editing} />
-              <Field label="Membership (€)" id="pm-fee" defaultValue="0" editable={editing} />
-              <Field label="Commission Rate (Members)" id="pm-crm" defaultValue="%10" editable={editing} />
-              <Field label="Commission Rate (Event)" id="pm-cre" defaultValue="%10" editable={editing} />
+              {/* platform sözleşmesi: bu değerleri admin belirler, agent SEND REQUEST ile değişiklik talep eder */}
+              <Field label="Type" id="pm-type" defaultValue="Association" />
+              <Field label="Membership (€)" id="pm-fee" defaultValue="0" />
+              <Field label="Commission Rate (Members)" id="pm-crm" defaultValue="%10" />
+              <Field label="Commission Rate (Event)" id="pm-cre" defaultValue="%10" />
             </div>
           </section>
 
