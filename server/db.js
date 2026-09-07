@@ -16,6 +16,7 @@ const EMPTY = {
   notifications: [],
   favourites: [],
   reviews: [],
+  agentRequests: [],
   nextId: 1,
 }
 
@@ -38,7 +39,7 @@ function seed() {
   const hash = bcrypt.hashSync('123456', 10)
 
   db.users = [
-    { id: nextId(), role: 'user', name: 'Deniz Kızılbora', email: 'deniz@sports.com', password: hash, phone: '+90 5** *** ** **', created: '2026-07-01' },
+    { id: nextId(), role: 'user', name: 'Deniz Kızılbora', email: 'deniz@sports.com', password: hash, phone: '', created: '2026-07-01', documents: {} },
     { id: nextId(), role: 'agent', agentType: 'association', name: 'Denizz Kızılbora', orgName: 'Famagusta Athletic Union', email: 'agent@sports.com', password: hash, phone: '+90 5** *** ** **', created: '2025-07-02', about: 'Anorthosis Famagusta, founded in 1911, is a vibrant multi-sport community dedicated to helping athletes of all ages reach their full potential.', membershipFee: 12, commissionMembers: 10, commissionEvents: 10 },
     { id: nextId(), role: 'admin', name: 'Denizzz Kızılbora', email: 'admin@sports.com', password: hash, phone: '+90 5** *** ** **', created: '2024-01-01' },
   ]
@@ -87,3 +88,4 @@ if (!db) seed()
 // eski db.json'larda yeni koleksiyonlar eksik olabilir
 db.favourites ??= []
 db.reviews ??= []
+db.agentRequests ??= []

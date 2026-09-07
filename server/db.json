@@ -5,7 +5,7 @@
       "role": "user",
       "name": "Deniz Kızılbora",
       "email": "deniz@sports.com",
-      "password": "$2b$10$iBvTo9ajZRss8RCT6GFG.OpZ/3zTzSfjGVs0glu6N4Zovyudat.5.",
+      "password": "$2b$10$684JnWVIJPaWRdFOBga5zuN/hmGQPf24weV4acYd1QbImZaTzVCPW",
       "phone": "+90 5** *** ** **",
       "created": "2026-07-01"
     },
@@ -15,8 +15,8 @@
       "agentType": "association",
       "name": "Denizz Kızılbora",
       "orgName": "Famagusta Athletic Union",
-      "email": "agent@sports.com",
-      "password": "$2b$10$iBvTo9ajZRss8RCT6GFG.OpZ/3zTzSfjGVs0glu6N4Zovyudat.5.",
+      "email": "denizz@sports.com",
+      "password": "$2b$10$684JnWVIJPaWRdFOBga5zuN/hmGQPf24weV4acYd1QbImZaTzVCPW",
       "phone": "+90 5** *** ** **",
       "created": "2025-07-02",
       "about": "Anorthosis Famagusta, founded in 1911, is a vibrant multi-sport community dedicated to helping athletes of all ages reach their full potential. Whether you want to compete professionally, join our youth academies, or stay active, we offer top-tier coaching in football, volleyball, and basketball. Join our family today to build your skills, make lifelong friends, and become part of a historic sports legacy.",
@@ -29,9 +29,27 @@
       "role": "admin",
       "name": "Denizzz Kızılbora",
       "email": "admin@sports.com",
-      "password": "$2b$10$iBvTo9ajZRss8RCT6GFG.OpZ/3zTzSfjGVs0glu6N4Zovyudat.5.",
+      "password": "$2b$10$684JnWVIJPaWRdFOBga5zuN/hmGQPf24weV4acYd1QbImZaTzVCPW",
       "phone": "+90 5** *** ** **",
       "created": "2024-01-01"
+    },
+    {
+      "id": 22,
+      "role": "user",
+      "name": "Sudenaz Helvacı",
+      "email": "sude@sports.com",
+      "password": "$2b$10$at1d0Ha3TUwoQ7K/qEUMH.xOR2iuM5u890B1zNmog7QFsH0gvtWn6",
+      "created": "2026-09-07"
+    },
+    {
+      "id": 25,
+      "role": "user",
+      "name": "adsfghf",
+      "email": "egrlklgrlks@sports.com",
+      "password": "$2b$10$F1wWa7g82rQ7Th9QMB1Q3.iA6MjSgJ70WT5T7ADBDNdZJwLKm2exm",
+      "created": "2026-09-07",
+      "phone": "",
+      "documents": {}
     }
   ],
   "events": [
@@ -205,6 +223,19 @@
           "time": "1 day ago"
         }
       ]
+    },
+    {
+      "id": 23,
+      "userId": 22,
+      "agentId": 3,
+      "messages": [
+        {
+          "id": 24,
+          "from": 22,
+          "text": "hello",
+          "time": "just now"
+        }
+      ]
     }
   ],
   "notifications": [
@@ -228,9 +259,29 @@
       "text": "Membership expiriy: Your membership for Famagusta Athletic Union has expired.",
       "time": "3 days ago",
       "dot": "red"
+    },
+    {
+      "id": 28,
+      "userId": 2,
+      "text": "Event Rejected: event işte has been sent back to drafts",
+      "time": "just now",
+      "dot": "red"
     }
   ],
   "favourites": [],
   "reviews": [],
-  "nextId": 22
+  "nextId": 29,
+  "agentRequests": [
+    {
+      "id": 26,
+      "userId": 25,
+      "agentType": "organizer",
+      "orgName": "",
+      "phone": "+1 555 425 66 55",
+      "reason": "qeartyuhj",
+      "status": "rejected",
+      "created": "2026-09-07",
+      "reviewedBy": 3
+    }
+  ]
 }
