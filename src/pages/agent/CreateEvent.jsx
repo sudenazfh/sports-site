@@ -16,17 +16,6 @@ const labelCls = 'font-mono text-[12px] uppercase text-white/70'
 const inputCls =
   'h-[34px] w-full rounded-[8px] border border-white/20 bg-night px-3 text-[12px] text-white outline-none focus:border-accent'
 
-function SmallBtn({ children }) {
-  return (
-    <button
-      type="button"
-      className="self-end rounded-[8px] bg-field px-3 py-1.5 text-[11px] font-bold text-white hover:brightness-125"
-    >
-      {children}
-    </button>
-  )
-}
-
 export default function CreateEvent({ mode = 'agent' }) {
   const admin = mode === 'admin'
   const report = mode === 'report'
