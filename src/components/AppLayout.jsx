@@ -24,6 +24,7 @@ const MENUS = {
       { label: 'Browse', to: '/agent/browse' },
       { label: 'My Events', to: '/agent/my-events' },
       { label: 'Create Event', to: '/agent/create-event' },
+      { label: 'Requests', to: '/agent/requests' },
       { label: 'Dashboard', to: '/agent/dashboard' },
       { label: 'Members', to: '/agent/members' },
       { label: 'Messages', to: '/agent/messages' },

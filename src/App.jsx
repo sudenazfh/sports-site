@@ -27,6 +27,7 @@ import AgentMemberDetail from './pages/agent/AgentMemberDetail.jsx'
 import AgentEventReviews from './pages/agent/AgentEventReviews.jsx'
 import CreateEvent from './pages/agent/CreateEvent.jsx'
 import AgentMyEvents from './pages/agent/AgentMyEvents.jsx'
+import AgentRequests from './pages/agent/AgentRequests.jsx'
 import AgentMembers from './pages/agent/AgentMembers.jsx'
 import AgentProfileSettings from './pages/agent/AgentProfileSettings.jsx'
 import EventDetails from './pages/agent/EventDetails.jsx'
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="/agent/create-event" element={<CreateEvent />} />
         <Route path="/agent/create-event/:id" element={<CreateEvent />} />
         <Route path="/agent/my-events" element={<AgentMyEvents />} />
+        <Route path="/agent/requests" element={<AgentRequests />} />
         <Route path="/agent/members" element={<AgentMembers />} />
         <Route path="/agent/messages" element={<Messages role="agent" />} />
         <Route path="/agent/notifications" element={<Notifications role="agent" />} />
