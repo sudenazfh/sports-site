@@ -68,11 +68,13 @@ export default function App() {
         <Route path="/event" element={<EventScreen />} />
         <Route path="/event/:id" element={<EventScreen />} />
         <Route path="/agent-profile" element={<AgentProfile />} />
+        <Route path="/agent/agent-profile" element={<AgentProfile role="agent" />} />
         <Route path="/visitor" element={<Browse visitor />} />
         <Route path="/visitor/event" element={<EventScreen visitor />} />
         <Route path="/visitor/event/:id" element={<EventScreen visitor />} />
         <Route path="/visitor/agent" element={<AgentProfile visitor />} />
         <Route path="/agent/browse" element={<Browse role="agent" />} />
+        <Route path="/agent/event/:id" element={<EventScreen role="agent" />} />
         <Route path="/agent/dashboard" element={<AgentDashboard />} />
         <Route path="/agent/income" element={<AgentIncome />} />
         <Route path="/agent/income/events" element={<AgentIncomeDetails kind="events" />} />
@@ -80,6 +82,7 @@ export default function App() {
         <Route path="/agent/members/:id" element={<AgentMemberDetail />} />
         <Route path="/agent/event-reviews/:id" element={<AgentEventReviews />} />
         <Route path="/agent/create-event" element={<CreateEvent />} />
+        <Route path="/agent/create-event/:id" element={<CreateEvent />} />
         <Route path="/agent/my-events" element={<AgentMyEvents />} />
         <Route path="/agent/members" element={<AgentMembers />} />
         <Route path="/agent/messages" element={<Messages role="agent" />} />
@@ -87,7 +90,6 @@ export default function App() {
         <Route path="/agent/profile" element={<AgentProfileSettings />} />
         <Route path="/agent/event-details" element={<EventDetails />} />
         <Route path="/agent/event-details/:id" element={<EventDetails />} />
-        <Route path="/agent/requests" element={<EventDetails />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/event-requests" element={<EventRequests />} />
         <Route path="/admin/account-requests" element={<AccountRequests />} />

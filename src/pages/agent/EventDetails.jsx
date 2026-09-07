@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
-import { ConfirmModal } from '../../components/Modals.jsx'
+import { ConfirmModal, Modal } from '../../components/Modals.jsx'
 
 const INITIAL_PARTICIPANTS = [
   { id: 1, name: 'Hello Kitty', member: false, accepted: 'Accepted 2 hours ago', fee: '€22,5', attended: false },
@@ -18,11 +18,14 @@ const INITIAL_PENDING = [
 export default function EventDetails({ admin = false }) {
   const navigate = useNavigate()
   const { id } = useParams()
-  const [tab, setTab] = useState('participants')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(searchParams.get('tab') === 'pending' ? 'pending' : 'participants')
   const [participants, setParticipants] = useState(INITIAL_PARTICIPANTS)
   const [pending, setPending] = useState(INITIAL_PENDING)
+  const [event, setEvent] = useState(null)
   const [query, setQuery] = useState('')
   const [approving, setApproving] = useState(null)
+  const [selectedRequest, setSelectedRequest] = useState(null)
 
   function approveAttendance() {
     setParticipants((xs) => xs.map((x) => (x.id === approving.id ? { ...x, attended: true } : x)))
@@ -31,17 +34,18 @@ export default function EventDetails({ admin = false }) {
 
   useEffect(() => {
     if (!id) return
+    api(`/events/${id}`).then(setEvent).catch(() => {})
     api(`/agent/events/${id}/participants`)
       .then((regs) => {
         setParticipants(
           regs
             .filter((r) => r.status === 'REGISTERED')
-            .map((r) => ({ id: r.id, name: r.user, member: false, accepted: `Accepted · ${r.date}`, fee: `€${r.paid}`, attended: false, live: true })),
+            .map((r) => ({ id: r.id, userId: r.userId, name: r.user, member: false, accepted: `Accepted · ${r.date}`, fee: `€${r.paid}`, attended: false, live: true })),
         )
         setPending(
           regs
             .filter((r) => r.status === 'PENDING')
-            .map((r) => ({ id: r.id, name: r.user, member: false, sent: r.date, live: true })),
+            .map((r) => ({ id: r.id, userId: r.userId, name: r.user, member: false, sent: r.date, live: true })),
         )
       })
       .catch(() => {})
@@ -86,29 +90,39 @@ export default function EventDetails({ admin = false }) {
             <div className="flex items-center gap-4">
               <span className="size-8 shrink-0 rounded-[8px] bg-[rgba(123,136,255,0.1)]" />
               <div>
-                <p className="text-[14px] font-bold">APOEL vs Omonai Derby</p>
-                <p className="text-[11px] text-white/70">August 3, 2026 · Nicosia</p>
+                <p className="text-[14px] font-bold">{event?.name ?? 'Loading event...'}</p>
+                  <p className="text-[11px] text-white/70">
+                    {event ? `${event.date} · ${event.city}` : 'Loading event...'}
+                  </p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-[12px] text-white/80">TOTAL COLLECTED</p>
-              <p className="text-[22px] font-extrabold text-accent">€337,5</p>
+              <p className="text-[22px] font-extrabold text-accent">
+                €{((event?.taken ?? 0) * (event?.price ?? 0) * 0.9).toFixed(1)}
+              </p>
               <p className="text-[10px] text-white/50">from accepted registirations</p>
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between text-[12px] text-white/70">
             <span>Participants</span>
-            <span>15/50</span>
+            <span>{event?.taken ?? 0}/{event?.capacity ?? 0}</span>
           </div>
           <div className="mt-1 h-[3px] w-full rounded bg-white/10">
-            <div className="h-full w-[30%] rounded bg-accent" />
+            <div
+              className="h-full rounded bg-accent"
+              style={{ width: `${event ? Math.min(100, Math.round((event.taken / event.capacity) * 100)) : 0}%` }}
+            />
           </div>
           <div className="mt-3 flex items-center justify-between text-[12px] text-white/70">
             <span>Attendance</span>
-            <span>1/50</span>
+            <span>{participants.filter((participant) => participant.attended).length}/{event?.capacity ?? 0}</span>
           </div>
           <div className="mt-1 h-[3px] w-full rounded bg-white/10">
-            <div className="h-full w-[2%] rounded bg-accent" />
+            <div
+              className="h-full rounded bg-accent"
+              style={{ width: `${event?.capacity ? Math.min(100, Math.round((participants.filter((participant) => participant.attended).length / event.capacity) * 100)) : 0}%` }}
+            />
           </div>
         </section>
 
@@ -168,7 +182,7 @@ export default function EventDetails({ admin = false }) {
                 )}
                 <div
                   className={`flex-1 ${admin ? '' : 'cursor-pointer hover:brightness-125'}`}
-                  onClick={admin ? undefined : () => navigate(`/agent/members/${p.id}`)}
+                  onClick={admin ? undefined : () => navigate(`/agent/members/${p.userId ?? p.id}`)}
                 >
                   <p className="text-[13px] font-bold">
                     {p.name}{' '}
@@ -191,12 +205,15 @@ export default function EventDetails({ admin = false }) {
 
         {tab === 'pending' &&
           pending.map((p) => (
-            <div
+              <div
               key={p.id}
               className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-6 py-4"
             >
               <span className="size-9 rounded-[8px] bg-[rgba(123,136,255,0.1)]" />
-              <div className="flex-1">
+              <div
+                className="flex-1 cursor-pointer hover:brightness-125"
+                onClick={() => setSelectedRequest(p)}
+              >
                 <p className="text-[13px] font-bold">
                   {p.name}{' '}
                   {p.member && <span className="ml-2 text-[11px] font-normal text-accent">· Member</span>}
@@ -226,6 +243,49 @@ export default function EventDetails({ admin = false }) {
           onNo={() => setApproving(null)}
           onYes={approveAttendance}
         />
+      )}
+      {selectedRequest && (
+        <Modal width="w-[490px]">
+          <div className="flex items-center gap-4">
+            <span className="size-16 shrink-0 rounded-full bg-white/90" />
+            <div className="flex-1">
+              <p className="text-[17px] font-bold">
+                {selectedRequest.name}{' '}
+                <span className="ml-1 text-[10px] font-normal text-accent">· Member</span>
+              </p>
+              <p className="text-[12px] text-white/80">Account created: 02/09/2025</p>
+              <p className="text-[11px] text-white/50">Member since: 08/06/2026</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {['View ID Document', 'View Medical Certificate', 'View Parent Consent'].map((label) => (
+              <button
+                key={label}
+                type="button"
+                className="rounded-[9px] bg-field py-2.5 text-[12px] font-bold text-white hover:brightness-125"
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRequest(null)
+                navigate('/agent/messages')
+              }}
+              className="rounded-[9px] bg-field py-2.5 text-[12px] font-bold text-white hover:brightness-125"
+            >
+              Message User
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedRequest(null)}
+            className="self-end rounded-[8px] bg-night px-5 py-2 text-[12px] font-bold text-white hover:brightness-150"
+          >
+            Close
+          </button>
+        </Modal>
       )}
     </AppLayout>
   )

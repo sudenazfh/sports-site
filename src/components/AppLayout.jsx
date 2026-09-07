@@ -24,7 +24,6 @@ const MENUS = {
       { label: 'Browse', to: '/agent/browse' },
       { label: 'My Events', to: '/agent/my-events' },
       { label: 'Create Event', to: '/agent/create-event' },
-      { label: 'Requests', to: '/agent/requests' },
       { label: 'Dashboard', to: '/agent/dashboard' },
       { label: 'Members', to: '/agent/members' },
       { label: 'Messages', to: '/agent/messages' },
@@ -63,7 +62,6 @@ export default function AppLayout({ title, headerRight, visitor = false, role = 
     )
   }
 
-  const menu = MENUS[role]
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
 
@@ -71,12 +69,15 @@ export default function AppLayout({ title, headerRight, visitor = false, role = 
     api('/me').then(setMe).catch(() => {})
   }, [])
 
+  const activeRole = me?.role ?? role
+  const menu = MENUS[activeRole]
+
   async function logout() {
     await api('/logout', { method: 'POST' }).catch(() => {})
     navigate('/login')
   }
 
-  const displayName = me && me.role === role ? me.name : menu.name
+  const displayName = me?.name ?? menu.name
 
   return (
     <div className="flex min-h-screen bg-night">

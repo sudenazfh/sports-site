@@ -57,7 +57,7 @@ function seed() {
 
   const userId = db.users[0].id
   db.registrations = [
-    { id: nextId(), userId, eventId: db.events[0].id, status: 'REGISTERED', paid: 25, date: 'July 1, 2026' },
+    { id: nextId(), userId, eventId: db.events[0].id, status: 'PENDING', paid: 25, date: 'July 1, 2026' },
     { id: nextId(), userId, eventId: db.events[1].id, status: 'REGISTERED', paid: 45, date: 'July 10, 2026' },
     { id: nextId(), userId, eventId: db.events[3].id, status: 'REGISTERED', paid: 5, date: 'July 18, 2026' },
   ]

@@ -1,13 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
-
-const EVENT_ROWS = [
-  { id: 1, name: 'APOEL vs Omonai Derby', sub: 'August 3, 2026  ·  Nicosia', gross: '€375', com: '%10', cut: '€37.5', net: '€337.5' },
-  { id: 2, name: 'Famagusta International Marathon', sub: 'August 15, 2026  ·  Famagusta', gross: '€415', com: '%10', cut: '€41.5', net: '€373.5' },
-  { id: 3, name: 'Cable Net Run', sub: 'October 11, 2026  ·  Famagusta', gross: '€150', com: '%10', cut: '€15.0', net: '€135.0' },
-  { id: 4, name: 'Beach Volleyball Cyprus', sub: 'August 12, 2026  ·  Kyrenia', gross: '€200', com: '%9', cut: '€18.0', net: '€180.0' },
-]
 
 const MEMBER_ROWS = [
   { id: 2, name: 'Deniz Kızılbora', sub: 'Member Since: 10 September, 2025', date: '21 July, 2026', gross: '€12', com: '%10', cut: '€1,2', net: '€10,8' },
@@ -18,8 +12,28 @@ const MEMBER_ROWS = [
 export default function AgentIncomeDetails({ kind = 'events' }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [eventRows, setEventRows] = useState([])
   const events = kind === 'events'
-  const rows = (events ? EVENT_ROWS : MEMBER_ROWS).filter((r) =>
+  useEffect(() => {
+    if (!events) return
+    api('/agent/events')
+      .then((agentEvents) =>
+        setEventRows(
+          agentEvents.map((event) => ({
+            id: event.id,
+            name: event.name,
+            sub: `${event.date}  ·  ${event.city}`,
+            gross: `€${event.taken * event.price}`,
+            com: '%10',
+            cut: `€${(event.taken * event.price * 0.1).toFixed(1)}`,
+            net: `€${(event.taken * event.price * 0.9).toFixed(1)}`,
+          })),
+        ),
+      )
+      .catch(() => {})
+  }, [events])
+
+  const rows = (events ? eventRows : MEMBER_ROWS).filter((r) =>
     r.name.toLowerCase().includes(query.toLowerCase()),
   )
 
@@ -86,13 +100,14 @@ export default function AgentIncomeDetails({ kind = 'events' }) {
             <p className="text-[15px] font-bold">{r.cut}</p>
             <p className="text-[15px] font-bold">{r.net}</p>
             <Link
-              to={events ? '/agent/create-event' : `/agent/members/${r.id}`}
+              to={events ? `/agent/event-details/${r.id}` : `/agent/members/${r.id}`}
               className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-4 py-1.5 text-center text-[11px] font-bold text-accent hover:brightness-125"
             >
               {events ? 'View Event' : 'View Member'}
             </Link>
           </div>
         ))}
+        {events && rows.length === 0 && <p className="text-[13px] text-white/50">No event income records.</p>}
       </div>
     </AppLayout>
   )

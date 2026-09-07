@@ -5,14 +5,14 @@ import EventCard from '../components/EventCard.jsx'
 import { LoginRequiredModal, ReasonModal } from '../components/Modals.jsx'
 import { events } from '../data/mock.js'
 
-export default function AgentProfile({ visitor = false }) {
+export default function AgentProfile({ visitor = false, role = 'user' }) {
   const navigate = useNavigate()
   const [reporting, setReporting] = useState(false)
   const agentEvents = events.slice(0, 2)
   const loginOr = (path) => (visitor ? '/login' : path)
 
   return (
-    <AppLayout title="Famagusta Athletic Union" visitor={visitor}>
+    <AppLayout title="Famagusta Athletic Union" visitor={visitor} role={role}>
       <div className="relative bg-gradient-to-r from-[#1b2148] to-night px-7 pt-7 pb-10">
         <div className="flex items-center justify-between">
           <button
@@ -81,7 +81,11 @@ export default function AgentProfile({ visitor = false }) {
             <p className="pb-3 text-[15px] font-bold">Events ({agentEvents.length})</p>
             <div className="flex gap-5">
               {agentEvents.map((e) => (
-                <EventCard key={e.id} event={e} to={visitor ? '/visitor/event' : '/event'} />
+                <EventCard
+                  key={e.id}
+                  event={e}
+                  to={visitor ? '/visitor/event' : role === 'agent' ? `/agent/event/${e.id}` : `/event/${e.id}`}
+                />
               ))}
             </div>
           </div>

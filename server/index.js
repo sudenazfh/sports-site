@@ -236,6 +236,17 @@ app.get('/api/agent/events', auth, requireRole('agent'), (req, res) => {
   res.json(getDb().events.filter((e) => e.agentId === req.user.id))
 })
 
+app.put('/api/agent/profile', auth, requireRole('agent'), (req, res) => {
+  const db = getDb()
+  const agent = db.users.find((u) => u.id === req.user.id)
+  const { name, email, phone, orgName, about, membershipFee } = req.body
+  if (!name || !email) return res.status(400).json({ error: 'Name and email are required' })
+  if (db.users.some((u) => u.id !== agent.id && u.email === email)) return res.status(409).json({ error: 'Email already registered' })
+  Object.assign(agent, { name, email, phone, orgName, about, membershipFee: Number(membershipFee) || 0 })
+  save()
+  res.json(publicUser(agent))
+})
+
 app.post('/api/agent/events', auth, requireRole('agent'), (req, res) => {
   const db = getDb()
   const { name, category, date, city, location, capacity, price, description, status } = req.body
@@ -279,6 +290,8 @@ app.delete('/api/agent/events/:id', auth, requireRole('agent'), (req, res) => {
 
 app.get('/api/agent/events/:id/participants', auth, requireRole('agent'), (req, res) => {
   const db = getDb()
+  const event = db.events.find((x) => x.id === Number(req.params.id) && x.agentId === req.user.id)
+  if (!event) return res.status(404).json({ error: 'Event not found' })
   const regs = db.registrations
     .filter((r) => r.eventId === Number(req.params.id))
     .map((r) => ({ ...r, user: db.users.find((u) => u.id === r.userId)?.name ?? 'Unknown' }))
@@ -287,6 +300,8 @@ app.get('/api/agent/events/:id/participants', auth, requireRole('agent'), (req, 
 
 app.get('/api/agent/events/:id/reviews', auth, requireRole('agent'), (req, res) => {
   const db = getDb()
+  const event = db.events.find((x) => x.id === Number(req.params.id) && x.agentId === req.user.id)
+  if (!event) return res.status(404).json({ error: 'Event not found' })
   res.json(
     db.reviews
       .filter((r) => r.eventId === Number(req.params.id))
@@ -308,9 +323,10 @@ app.post('/api/registrations/:id/:action', auth, requireRole('agent'), (req, res
   const i = db.registrations.findIndex((r) => r.id === Number(req.params.id))
   if (i === -1) return res.status(404).json({ error: 'Registration not found' })
   const reg = db.registrations[i]
+  const event = db.events.find((e) => e.id === reg.eventId && e.agentId === req.user.id)
+  if (!event) return res.status(403).json({ error: 'Forbidden' })
   if (req.params.action === 'accept') reg.status = 'REGISTERED'
   else {
-    const event = db.events.find((e) => e.id === reg.eventId)
     if (event && reg.status === 'REGISTERED') event.taken = Math.max(0, event.taken - 1)
     db.registrations.splice(i, 1)
   }

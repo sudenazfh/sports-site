@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
@@ -31,10 +31,20 @@ export default function CreateEvent({ mode = 'agent' }) {
   const admin = mode === 'admin'
   const report = mode === 'report'
   const navigate = useNavigate()
-  const { id: reviewId } = useParams()
+  const { id } = useParams()
+  const reviewId = id
+  const editing = mode === 'agent' && Boolean(id)
+  const [eventData, setEventData] = useState(null)
   const [type, setType] = useState('paid-all')
   const [saveError, setSaveError] = useState(null)
   const [modal, setModal] = useState(null) // 'reject' | 'cancel' | 'reject-report' | 'publish'
+
+  useEffect(() => {
+    if (!editing) return
+    api('/agent/events')
+      .then((events) => setEventData(events.find((event) => event.id === Number(id)) ?? null))
+      .catch(() => {})
+  }, [editing, id])
 
   async function decide(action) {
     setSaveError(null)
@@ -51,27 +61,35 @@ export default function CreateEvent({ mode = 'agent' }) {
     setSaveError(null)
     const v = (id) => document.getElementById(id)?.value
     try {
-      await api('/agent/events', {
-        method: 'POST',
-        body: {
-          name: v('ev-name'),
-          category: v('ev-sport'),
-          city: v('ev-city'),
-          date: v('ev-date-0') || 'TBA',
-          location: v('ev-loc'),
-          capacity: v('ev-max'),
-          price: type.startsWith('free') ? 0 : v('ev-fee'),
-          description: v('ev-desc'),
-          status,
-        },
+      const body = {
+        name: v('ev-name'),
+        category: v('ev-sport'),
+        city: v('ev-city'),
+        date: v('ev-date-0') || 'TBA',
+        location: v('ev-loc'),
+        capacity: v('ev-max'),
+        price: type.startsWith('free') ? 0 : v('ev-fee'),
+        description: v('ev-desc'),
+        status,
+      }
+      await api(editing ? `/agent/events/${id}` : '/agent/events', {
+        method: editing ? 'PUT' : 'POST',
+        body,
       })
       navigate('/agent/my-events')
     } catch (err) {
       setSaveError(err.message)
     }
   }
+
+  async function deleteEvent() {
+    if (!editing) return
+    await api(`/agent/events/${id}`, { method: 'DELETE' }).catch(() => {})
+    navigate('/agent/my-events')
+  }
   // agent yeni etkinlik oluşturur: boş form + placeholder; admin/report bir başvuruyu görüntüler: örnek değerler dolu
-  const filled = admin || report
+  const filled = admin || report || (editing && eventData)
+  const eventValue = (key, fallback) => eventData?.[key] ?? fallback
   const dv = (val) => (filled ? { defaultValue: val } : { placeholder: val })
   const [dates, setDates] = useState(
     filled
@@ -84,6 +102,20 @@ export default function CreateEvent({ mode = 'agent' }) {
   )
   const [locations, setLocations] = useState([filled ? 'GSP Stadium' : ''])
 
+  useEffect(() => {
+    if (!eventData) return
+    setDates([{ date: eventData.date ?? '', time: '' }])
+    setLocations([eventData.location ?? ''])
+  }, [eventData])
+
+  if (editing && !eventData) {
+    return (
+      <AppLayout title="Edit Event" role="agent">
+        <p className="p-10 text-white/60">Loading event...</p>
+      </AppLayout>
+    )
+  }
+
   const headerRight = (
     <span className="mr-auto ml-4 rounded-[10px] bg-field px-3 py-1 font-anon text-[11px] font-bold text-accent">
       STATUS: {admin ? 'PENDING' : 'ACTIVE'}
@@ -92,7 +124,7 @@ export default function CreateEvent({ mode = 'agent' }) {
 
   return (
     <AppLayout
-      title={report ? 'Reports' : 'Nicosia Football Tournament'}
+      title={report ? 'Reports' : editing ? eventData.name : 'Nicosia Football Tournament'}
       role={admin || report ? 'admin' : 'agent'}
       headerRight={headerRight}
     >
@@ -103,7 +135,7 @@ export default function CreateEvent({ mode = 'agent' }) {
 
             <div className="flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-name">Event Name</label>
-              <input id="ev-name" {...dv('Nicosia Football Tournament')} className={inputCls} />
+              <input id="ev-name" {...dv(eventValue('name', 'Nicosia Football Tournament'))} className={inputCls} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -120,7 +152,7 @@ export default function CreateEvent({ mode = 'agent' }) {
               </div>
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-city">City</label>
-                <select id="ev-city" className={inputCls}>
+                <select id="ev-city" defaultValue={eventData?.city ?? 'Nicosia'} className={inputCls}>
                   <option>Nicosia</option>
                   <option>Famagusta</option>
                   <option>Kyrenia</option>
@@ -218,7 +250,7 @@ export default function CreateEvent({ mode = 'agent' }) {
             </div>
             <div className="mt-2 flex flex-col gap-2">
               <label className={labelCls} htmlFor="ev-fee">Participation Fee (€)</label>
-              <input id="ev-fee" {...dv('15')} className={inputCls} />
+              <input id="ev-fee" {...dv(eventValue('price', '15'))} className={inputCls} />
             </div>
           </section>
         </div>
@@ -231,14 +263,14 @@ export default function CreateEvent({ mode = 'agent' }) {
               <textarea
                 id="ev-desc"
                 rows={3}
-                {...dv('The biggest fixture in Cypriot football. This is the defining match of the Cyprus football calendar, drawing fans from across the island and beyond. The atmosphere is electric — arrive early.')}
+                {...dv(eventValue('description', 'The biggest fixture in Cypriot football. This is the defining match of the Cyprus football calendar, drawing fans from across the island and beyond. The atmosphere is electric — arrive early.'))}
                 className="w-full resize-none rounded-[8px] border border-white/20 bg-night px-3 py-2 text-[12px] leading-relaxed text-white outline-none focus:border-accent"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-max">Max Attendees (optional)</label>
-                <input id="ev-max" {...dv('50')} className={inputCls} />
+                <input id="ev-max" {...dv(eventValue('capacity', '50'))} className={inputCls} />
               </div>
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-deadline">Last Registration Date</label>
@@ -266,17 +298,17 @@ export default function CreateEvent({ mode = 'agent' }) {
               <div className="flex items-center justify-around">
                 <button
                   type="button"
-                  onClick={() => (admin ? setModal('reject') : saveEvent('draft'))}
+                  onClick={() => (admin ? setModal('reject') : editing ? deleteEvent() : saveEvent('draft'))}
                   className="rounded-[10px] bg-[rgba(247,63,82,0.1)] px-8 py-2.5 text-[14px] font-bold text-[#f73f52] hover:brightness-125"
                 >
-                  {admin ? 'Reject Event' : 'Save As Draft'}
+                  {admin ? 'Reject Event' : editing ? 'Delete Event' : 'Save As Draft'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => (admin ? decide('approve') : setModal('publish'))}
+                  onClick={() => (admin ? decide('approve') : editing ? saveEvent(eventData.status) : setModal('publish'))}
                   className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-8 py-2.5 text-[14px] font-bold text-accent hover:brightness-125"
                 >
-                  {admin ? 'Approve Event' : 'Publish Event'}
+                  {admin ? 'Approve Event' : editing ? 'Save Changes' : 'Publish Event'}
                 </button>
               </div>
             </section>

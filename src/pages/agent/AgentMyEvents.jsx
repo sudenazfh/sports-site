@@ -87,7 +87,7 @@ export default function AgentMyEvents() {
               )}
               {e.status !== 'cancelled' && (
                 <Link
-                  to={`/agent/event-details/${e.id}`}
+                  to={`/agent/create-event/${e.id}`}
                   className="rounded-[10px] bg-night px-5 py-2 text-[11px] font-bold text-white hover:brightness-150"
                 >
                   Details
@@ -102,7 +102,7 @@ export default function AgentMyEvents() {
                 </Link>
               )}
               <Link
-                to="/agent/create-event"
+                to={`/agent/event-details/${e.id}`}
                 className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-4 py-2 text-[11px] font-bold text-accent hover:brightness-125"
               >
                 View Event

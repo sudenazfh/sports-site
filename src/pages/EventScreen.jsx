@@ -6,22 +6,29 @@ import { LoginRequiredModal, ReasonModal } from '../components/Modals.jsx'
 import heartFav from '../assets/icon-heart-fav.svg'
 import { categoryImage } from '../data/mock.js'
 
-export default function EventScreen({ visitor = false }) {
+export default function EventScreen({ visitor = false, role = 'user' }) {
   const navigate = useNavigate()
   const { id = 1 } = useParams()
   const [event, setEvent] = useState(null)
   const [registered, setRegistered] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [reporting, setReporting] = useState(false)
-  const loginOr = (path) => (visitor ? '/login' : path)
+  const loginOr = (path) => {
+    if (visitor) return '/login'
+    if (role === 'agent') return '/agent/messages'
+    if (role === 'admin') return '/admin/messages'
+    return path
+  }
+  const profilePath = visitor ? '/visitor/agent' : role === 'agent' ? '/agent/agent-profile' : '/agent-profile'
+  const canRegister = visitor || role === 'user'
 
   useEffect(() => {
     api(`/events/${id}`).then(setEvent).catch(() => {})
-    if (!visitor)
+    if (!visitor && role === 'user')
       api('/my/registrations')
         .then((rs) => setRegistered(rs.some((r) => r.eventId === Number(id))))
         .catch(() => {})
-  }, [id, visitor])
+  }, [id, visitor, role])
 
   async function cancelRegistration() {
     try {
@@ -34,7 +41,7 @@ export default function EventScreen({ visitor = false }) {
 
   if (!event) {
     return (
-      <AppLayout title="Event" visitor={visitor}>
+      <AppLayout title="Event" visitor={visitor} role={role}>
         <p className="p-10 text-white/60">Loading event...</p>
       </AppLayout>
     )
@@ -44,7 +51,7 @@ export default function EventScreen({ visitor = false }) {
   const agentName = event.agent?.orgName ?? 'Unknown Agent'
 
   return (
-    <AppLayout title={event.name} visitor={visitor}>
+    <AppLayout title={event.name} visitor={visitor} role={role}>
       <div className="relative h-[290px] overflow-clip">
         <img src={categoryImage(event.category)} alt="" className="size-full object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-t from-night via-transparent" />
@@ -110,7 +117,7 @@ export default function EventScreen({ visitor = false }) {
               <p className="text-[11px] text-white/60">{event.agent?.agentType === 'association' ? 'Association' : 'Organizer'}</p>
             </div>
             <Link
-              to={visitor ? '/visitor/agent' : '/agent-profile'}
+              to={profilePath}
               className="rounded-[10px] bg-night px-3 py-1.5 text-[10px] font-bold text-white hover:brightness-150"
             >
               VIEW PROFILE →
@@ -145,7 +152,11 @@ export default function EventScreen({ visitor = false }) {
               <div className="h-full rounded bg-accent" style={{ width: `${pct}%` }} />
             </div>
           </div>
-          {registered ? (
+          {!canRegister ? (
+            <span className="self-center rounded-[10px] border border-white/10 bg-night px-10 py-2.5 font-serif text-[15px] font-bold text-white/60">
+              AGENT VIEW
+            </span>
+          ) : registered ? (
             <span className="self-center rounded-[10px] border border-accent/40 bg-[rgba(123,136,255,0.15)] px-10 py-2.5 font-serif text-[15px] font-bold text-accent">
               PAID
             </span>

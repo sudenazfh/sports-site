@@ -15,9 +15,9 @@ const HISTORY = [
 ]
 
 const ATTENDED = [
-  { id: 1, name: 'APOEL vs Omonai Derby', sub: 'August 3, 2026  ·  Nicosia', taken: 15, capacity: 50 },
-  { id: 2, name: 'Famagusta International Marathon', sub: 'August 15, 2026  ·  Famagusta', taken: 90, capacity: 100 },
-  { id: 3, name: 'Aquatic Cup', sub: 'Sep 5, 2026  ·  Nicosia', taken: 20, capacity: 150 },
+  { id: 4, name: 'APOEL vs Omonai Derby', sub: 'August 3, 2026  ·  Nicosia', taken: 15, capacity: 50 },
+  { id: 5, name: 'Famagusta International Marathon', sub: 'August 15, 2026  ·  Famagusta', taken: 90, capacity: 100 },
+  { id: 11, name: 'Aquatic Cup', sub: 'Sep 5, 2026  ·  Nicosia', taken: 20, capacity: 150 },
 ]
 
 export default function AgentMemberDetail() {
@@ -45,6 +45,12 @@ export default function AgentMemberDetail() {
                 {b}
               </button>
             ))}
+            <Link
+              to="/agent/messages"
+              className="rounded-[10px] border border-white/10 bg-card px-6 py-2.5 text-[13px] font-bold text-white hover:border-accent"
+            >
+              Message User
+            </Link>
           </div>
         </div>
 

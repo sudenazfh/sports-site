@@ -48,7 +48,13 @@ export default function Browse({ visitor = false, role = 'user' }) {
   )
 
   const eventPath = (id) =>
-    visitor ? `/visitor/event/${id}` : role === 'admin' ? `/admin/event-view/${id}` : `/event/${id}`
+    visitor
+      ? `/visitor/event/${id}`
+      : role === 'admin'
+        ? `/admin/event-view/${id}`
+        : role === 'agent'
+          ? `/agent/event/${id}`
+          : `/event/${id}`
 
   return (
     <AppLayout
