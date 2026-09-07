@@ -91,9 +91,9 @@ export default function EventDetails({ admin = false }) {
               <span className="size-8 shrink-0 rounded-[8px] bg-[rgba(123,136,255,0.1)]" />
               <div>
                 <p className="text-[14px] font-bold">{event?.name ?? 'Loading event...'}</p>
-                  <p className="text-[11px] text-white/70">
-                    {event ? `${event.date} · ${event.city}` : 'Loading event...'}
-                  </p>
+                <p className="text-[11px] text-white/70">
+                  {event ? `${event.date} · ${event.city}` : 'Loading event...'}
+                </p>
               </div>
             </div>
             <div className="text-right">
@@ -205,7 +205,7 @@ export default function EventDetails({ admin = false }) {
 
         {tab === 'pending' &&
           pending.map((p) => (
-              <div
+            <div
               key={p.id}
               className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-6 py-4"
             >
