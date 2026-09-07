@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import AppLayout from '../../components/AppLayout.jsx'
+import CurrencyRates from '../../components/CurrencyRates.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
 
@@ -16,19 +17,6 @@ const PENDING = [
   { text: '4 Reports', to: '/admin/reports' },
   { text: '2 new messages', to: '/admin/messages' },
   { text: '8 change of commission rate requests', to: '/admin/account-requests' },
-]
-
-const CURRENCIES = [
-  ['EUR', '47.0550', '48.6555'],
-  ['USD', '54.5780', '56.435'],
-  ['GBP', '63.8255', '66.00600'],
-  ['AUD', '33.0905', '34.9195'],
-  ['DKK', '7.2140', '7.6085'],
-  ['SEK', '4.9035', '5.1715'],
-  ['CHF', '57.4645', '60.6005'],
-  ['JPY', '0.2955', '0.3055'],
-  ['CAD', '33.5560', '35.3930'],
-  ['NOK', '4.9400', '5.2100'],
 ]
 
 const REVENUE_BY_CITY = [
@@ -152,27 +140,7 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <section className="rounded-[12px] border border-white/10 bg-card p-6">
-            <p className="pb-4 text-[15px] font-bold">Live Currency Rates (TRY)</p>
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-white/20 text-[12px] text-white/60">
-                  <th className="pb-2 font-normal">CURRENCY</th>
-                  <th className="pb-2 font-normal">BUYING</th>
-                  <th className="pb-2 font-normal">SELLING</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CURRENCIES.map(([c, b, s]) => (
-                  <tr key={c}>
-                    <td className="py-1.5 font-bold">{c}</td>
-                    <td className="py-1.5">{b}</td>
-                    <td className="py-1.5">{s}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+          <CurrencyRates />
         </div>
       </div>
     </AppLayout>

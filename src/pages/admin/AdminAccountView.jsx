@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AppLayout from '../../components/AppLayout.jsx'
 import avatar from '../../assets/avatar.svg'
 
@@ -95,12 +95,12 @@ export default function AdminAccountView() {
                   {e.date} <span className="mx-1">·</span> {e.city}
                 </p>
               </div>
-              <button
-                type="button"
+              <Link
+                to={`/admin/reported-event/${e.name === 'APOEL vs Omonai Derby' ? 4 : e.name.includes('Marathon') ? 5 : 11}`}
                 className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-4 py-2 text-[11px] font-bold text-accent hover:brightness-125"
               >
                 View Event
-              </button>
+              </Link>
             </div>
             <div className="mt-4 flex items-center justify-between text-[12px] text-white/70">
               <span>Participants</span>

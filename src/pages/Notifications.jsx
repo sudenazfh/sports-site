@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import AppLayout from '../components/AppLayout.jsx'
-import { agentNotifications, notifications } from '../data/mock.js'
 
 const DOTS = {
   blue: 'bg-[#7b88ff]',
@@ -11,11 +10,9 @@ const DOTS = {
 }
 
 export default function Notifications({ role = 'user' }) {
-  const fallback = role === 'agent' ? agentNotifications : notifications
-  const [source, setSource] = useState(fallback)
+  const [source, setSource] = useState([])
 
   useEffect(() => {
-    if (role !== 'user') return
     api('/my/notifications')
       .then(setSource)
       .catch(() => {})

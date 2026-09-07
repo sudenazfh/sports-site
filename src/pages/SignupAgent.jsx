@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthField from '../components/AuthField.jsx'
+import { api } from '../api.js'
 
 const TYPES = [
   {
@@ -18,10 +19,21 @@ const TYPES = [
 export default function SignupAgent() {
   const navigate = useNavigate()
   const [type, setType] = useState('organizer')
+  const [error, setError] = useState(null)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    navigate('/login')
+    const f = e.target
+    if (f.password.value !== f.confirm.value) return
+    try {
+      await api('/register', { method: 'POST', body: { name: f.fullname.value, email: f.email.value, password: f.password.value } })
+      await api('/login', { method: 'POST', body: { email: f.email.value, password: f.password.value } })
+      await api('/agent-requests', { method: 'POST', body: { agentType: type, orgName: f.org.value, phone: f.phone.value, reason: f.reason.value } })
+      await api('/logout', { method: 'POST' })
+      navigate('/login')
+    } catch (error) {
+      setError(error.message)
+    }
   }
 
   return (
@@ -39,6 +51,7 @@ export default function SignupAgent() {
           <p className="text-[14px] text-white/70">
             Partner with Sports Life to host and manage premium events
           </p>
+          {error && <p className="text-[13px] text-[#f73f52]">{error}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

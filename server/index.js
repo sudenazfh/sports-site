@@ -42,6 +42,8 @@ app.post('/api/register', (req, res) => {
     email,
     password: bcrypt.hashSync(password, 10),
     created: new Date().toISOString().slice(0, 10),
+    phone: '',
+    documents: {},
   }
   db.users.push(user)
   save()
@@ -53,6 +55,8 @@ app.post('/api/login', (req, res) => {
   const user = getDb().users.find((u) => u.email === email)
   if (!user || !bcrypt.compareSync(password || '', user.password))
     return res.status(401).json({ error: 'Wrong email or password' })
+  if (user.role === 'agent' && user.approvalStatus === 'pending')
+    return res.status(403).json({ error: 'Your agent access request is awaiting admin approval' })
   const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax' })
   res.json(publicUser(user))
@@ -64,6 +68,63 @@ app.post('/api/logout', (req, res) => {
 })
 
 app.get('/api/me', auth, (req, res) => res.json(publicUser(req.user)))
+
+app.put('/api/profile', auth, (req, res) => {
+  const db = getDb()
+  const user = db.users.find((u) => u.id === req.user.id)
+  const { name, email, phone, avatar, avatarPosition } = req.body
+  if (!name || !email) return res.status(400).json({ error: 'Name and email are required' })
+  if (db.users.some((u) => u.id !== user.id && u.email === email)) return res.status(409).json({ error: 'Email already registered' })
+  Object.assign(user, { name, email, phone: phone || '', avatar: avatar || user.avatar, avatarPosition: avatarPosition || user.avatarPosition })
+  save()
+  res.json(publicUser(user))
+})
+
+app.put('/api/profile/password', auth, (req, res) => {
+  const { password } = req.body
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+  const user = getDb().users.find((u) => u.id === req.user.id)
+  user.password = bcrypt.hashSync(password, 10)
+  save()
+  res.json({ ok: true })
+})
+
+app.put('/api/profile/documents/:kind', auth, (req, res) => {
+  const { name, data } = req.body
+  if (!data || !data.startsWith('data:application/pdf')) return res.status(400).json({ error: 'A PDF document is required' })
+  const user = getDb().users.find((u) => u.id === req.user.id)
+  user.documents ??= {}
+  user.documents[req.params.kind] = { name: name || `${req.params.kind}.pdf`, data }
+  save()
+  res.json({ ok: true, document: user.documents[req.params.kind] })
+})
+
+app.post('/api/agent-requests', auth, (req, res) => {
+  const db = getDb()
+  if (req.user.role !== 'user') return res.status(403).json({ error: 'Only user accounts can request agent access' })
+  if (db.agentRequests.some((request) => request.userId === req.user.id && request.status === 'pending'))
+    return res.status(409).json({ error: 'An agent request is already pending' })
+  const { agentType, orgName, phone, reason } = req.body
+  const request = { id: nextId(), userId: req.user.id, agentType, orgName: orgName || '', phone: phone || '', reason: reason || '', status: 'pending', created: new Date().toISOString().slice(0, 10) }
+  db.agentRequests.push(request)
+  save()
+  res.json(request)
+})
+
+app.get('/api/currency-rates', async (_req, res) => {
+  const currencies = ['EUR', 'USD', 'GBP', 'AUD', 'DKK', 'SEK', 'CHF', 'JPY']
+  try {
+    const response = await fetch(`https://api.frankfurter.app/latest?from=TRY&to=${currencies.join(',')}`)
+    if (!response.ok) throw new Error('Currency service unavailable')
+    const data = await response.json()
+    res.json(currencies.map((currency) => {
+      const rate = 1 / Number(data.rates[currency])
+      return [currency, (rate * 0.995).toFixed(4), (rate * 1.005).toFixed(4)]
+    }))
+  } catch {
+    res.status(503).json({ error: 'Currency rates unavailable' })
+  }
+})
 
 // ---- Events ----
 app.get('/api/events', (req, res) => {
@@ -380,6 +441,34 @@ app.get('/api/my/conversations', auth, (req, res) => {
   )
 })
 
+app.get('/api/users/search', auth, (req, res) => {
+  const query = String(req.query.q || '').trim().toLowerCase()
+  if (!query) return res.json([])
+  res.json(
+    getDb().users
+      .filter((user) => user.id !== req.user.id && `${user.orgName ?? ''} ${user.name} ${user.email}`.toLowerCase().includes(query))
+      .map(publicUser),
+  )
+})
+
+app.post('/api/conversations', auth, (req, res) => {
+  const db = getDb()
+  const otherId = Number(req.body.userId)
+  const other = db.users.find((user) => user.id === otherId)
+  if (!other || other.id === req.user.id) return res.status(404).json({ error: 'User not found' })
+  const existing = db.conversations.find(
+    (conversation) =>
+      (conversation.userId === req.user.id && conversation.agentId === otherId) ||
+      (conversation.userId === otherId && conversation.agentId === req.user.id),
+  )
+  const conversation = existing ?? { id: nextId(), userId: req.user.id, agentId: otherId, messages: [] }
+  if (!existing) {
+    db.conversations.push(conversation)
+    save()
+  }
+  res.json({ id: conversation.id, name: other.orgName ?? other.name, messages: conversation.messages.map((m) => ({ ...m, me: m.from === req.user.id })), live: true, preview: conversation.messages.at(-1)?.text ?? '' })
+})
+
 app.post('/api/conversations/:id/messages', auth, (req, res) => {
   const db = getDb()
   const c = db.conversations.find(
@@ -427,6 +516,33 @@ app.post('/api/admin/events/:id/:action', auth, requireRole('admin'), (req, res)
 
 app.get('/api/admin/accounts', auth, requireRole('admin'), (req, res) => {
   res.json(getDb().users.map(({ password, ...u }) => u))
+})
+
+app.get('/api/admin/agent-requests', auth, requireRole('admin'), (req, res) => {
+  const db = getDb()
+  res.json(db.agentRequests.map((request) => ({ ...request, user: publicUser(db.users.find((user) => user.id === request.userId)) })))
+})
+
+app.post('/api/admin/agent-requests/:id/:action', auth, requireRole('admin'), (req, res) => {
+  if (!['approve', 'reject'].includes(req.params.action)) return res.status(400).json({ error: 'Unknown action' })
+  const db = getDb()
+  const request = db.agentRequests.find((item) => item.id === Number(req.params.id))
+  if (!request) return res.status(404).json({ error: 'Request not found' })
+  const user = db.users.find((item) => item.id === request.userId)
+  if (!user) return res.status(404).json({ error: 'User not found' })
+  request.status = req.params.action === 'approve' ? 'approved' : 'rejected'
+  request.reviewedBy = req.user.id
+  if (request.status === 'approved') {
+    user.role = 'agent'
+    user.agentType = request.agentType
+    user.orgName = request.orgName
+    user.phone = request.phone
+    user.approvalStatus = 'approved'
+    user.commissionMembers = Number(req.body.commissionMembers) || (request.agentType === 'association' ? 10 : 0)
+    user.commissionEvents = Number(req.body.commissionEvents) || 10
+  }
+  save()
+  res.json({ request, user: publicUser(user) })
 })
 
 app.post('/api/admin/accounts/:id/:action', auth, requireRole('admin'), (req, res) => {

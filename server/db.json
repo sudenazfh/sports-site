@@ -166,6 +166,34 @@
       "status": "active",
       "memberNote": "Free for Members",
       "description": "Swimming competition."
+    },
+    {
+      "id": 29,
+      "agentId": 2,
+      "name": "event işte",
+      "category": "Football",
+      "date": "05.08.2026",
+      "city": "Nicosia",
+      "location": "GSP Stadium",
+      "taken": 0,
+      "capacity": "50",
+      "price": "0",
+      "status": "draft",
+      "description": "des"
+    },
+    {
+      "id": 31,
+      "agentId": 2,
+      "name": "öyle",
+      "category": "FOOTBALL",
+      "date": "05.08.2026",
+      "city": "Nicosia",
+      "location": "lef",
+      "taken": 0,
+      "capacity": 50,
+      "price": 0,
+      "status": "pending",
+      "description": "des"
     }
   ],
   "registrations": [
@@ -266,11 +294,18 @@
       "text": "Event Rejected: event işte has been sent back to drafts",
       "time": "just now",
       "dot": "red"
+    },
+    {
+      "id": 30,
+      "userId": 2,
+      "text": "Event Rejected: event işte has been sent back to drafts",
+      "time": "just now",
+      "dot": "red"
     }
   ],
   "favourites": [],
   "reviews": [],
-  "nextId": 29,
+  "nextId": 32,
   "agentRequests": [
     {
       "id": 26,
