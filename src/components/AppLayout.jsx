@@ -51,6 +51,13 @@ const MENUS = {
 }
 
 export default function AppLayout({ title, headerRight, visitor = false, role = 'user', children }) {
+  const navigate = useNavigate()
+  const [me, setMe] = useState(null)
+
+  useEffect(() => {
+    if (!visitor) api('/me').then(setMe).catch(() => {})
+  }, [visitor])
+
   if (visitor) {
     return (
       <div className="flex min-h-screen flex-col bg-night">
@@ -62,13 +69,6 @@ export default function AppLayout({ title, headerRight, visitor = false, role = 
       </div>
     )
   }
-
-  const navigate = useNavigate()
-  const [me, setMe] = useState(null)
-
-  useEffect(() => {
-    api('/me').then(setMe).catch(() => {})
-  }, [])
 
   const activeRole = me?.role ?? role
   const menu = MENUS[activeRole]

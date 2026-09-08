@@ -80,20 +80,21 @@ export function EventRequests() {
 
 export function AccountRequests() {
   const [query, setQuery] = useState('')
-  const rows = [
-    { id: 1, name: 'Famagusta Athletic Union', sub: 'Request Sent: 4 February 2024' },
-    { id: 2, name: 'İdil Derin', sub: 'Commission Change Request: 10 June 2025', kind: 'commission' },
-    { id: 3, name: 'İnci Nakışçı', sub: 'Request Sent: 2 July 2026' },
-  ].filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+  const [rows, setRows] = useState([])
+
+  useEffect(() => {
+    api('/admin/agent-requests').then((requests) => setRows(requests.map((request) => ({ id: request.id, name: request.user?.name, sub: `Request Sent: ${request.created}`, kind: request.agentType, email: request.user?.email })))).catch(() => {})
+  }, [])
+  const shown = rows.filter((r) => r.name?.toLowerCase().includes(query.toLowerCase()))
 
   return (
     <AppLayout title="Account Requests" role="admin">
       <div className="flex flex-col gap-5 p-7">
         <AdminSearchBar query={query} onQuery={setQuery} dropdowns={2} />
-        {rows.map((r) => (
+        {shown.map((r) => (
           <AdminRow key={r.id} title={r.name} subtitle={r.sub}>
             <Link
-              to={r.kind === 'commission' ? '/admin/account-request-view?kind=commission' : '/admin/account-request-view'}
+              to={`/admin/account-request-view?id=${r.id}`}
               className={viewBtnCls}
             >
               View Info
@@ -159,10 +160,12 @@ export function Accounts() {
             >
               {r.banned ? 'Remove Ban' : 'Ban'}
             </button>
-            <button type="button" onClick={() => setCommissionFor(r)} className={greyBtnCls}>
-              Commission
-            </button>
-            <Link to={r.role === 'agent' ? '/admin/agent-view' : '/admin/user-view'} className={viewBtnCls}>
+            {r.role !== 'user' && (
+              <button type="button" onClick={() => setCommissionFor(r)} className={greyBtnCls}>
+                Commission
+              </button>
+            )}
+            <Link to={r.role === 'agent' ? `/admin/agent-view/${r.id}` : `/admin/user-view/${r.id}`} className={viewBtnCls}>
               View Info
             </Link>
           </AdminRow>

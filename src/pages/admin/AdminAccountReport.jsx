@@ -5,14 +5,14 @@ const labelCls = 'text-[14px] font-bold'
 const inputCls =
   'w-full rounded-[8px] border border-white/20 bg-night px-4 py-3 text-[13px] text-white outline-none'
 
-function Panel({ title, children }) {
+function Panel({ title, children, to }) {
   return (
     <section className="flex flex-col gap-4 rounded-[15px] border border-white/10 bg-card p-8">
       <div className="flex items-center justify-between">
         <span />
         <p className="text-[16px] font-bold">{title}</p>
         <Link
-          to="/agent-profile"
+          to={to}
           className="rounded-[8px] bg-[rgba(123,136,255,0.2)] px-4 py-2 text-[12px] font-bold text-accent hover:brightness-125"
         >
           View Page
@@ -30,7 +30,7 @@ export default function AdminAccountReport() {
     <AppLayout title="Reports" role="admin">
       <div className="flex flex-wrap items-start gap-7 p-7">
         <div className="flex min-w-[520px] flex-[1.6] flex-col gap-7">
-          <Panel title="Reported Account">
+          <Panel title="Reported Account" to="/admin/agent-view/2">
             <div className="grid grid-cols-2 gap-5">
               <div className="flex flex-col gap-2">
                 <span className={labelCls}>Full Name</span>
@@ -68,7 +68,7 @@ export default function AdminAccountReport() {
             </div>
           </Panel>
 
-          <Panel title="Reporting Account">
+          <Panel title="Reporting Account" to="/admin/user-view/1">
             <div className="grid grid-cols-2 gap-5">
               <div className="flex flex-col gap-2">
                 <span className={labelCls}>Full Name</span>

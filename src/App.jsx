@@ -101,13 +101,16 @@ export default function App() {
         <Route path="/admin/messages" element={<Messages role="admin" />} />
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/report-view" element={<CreateEvent mode="report" />} />
+        <Route path="/admin/reported-event/:id" element={<EventScreen role="admin" />} />
         <Route path="/admin/event-view" element={<CreateEvent mode="admin" />} />
         <Route path="/admin/event-view/:id" element={<CreateEvent mode="admin" />} />
         <Route path="/admin/account-view" element={<AdminAccountView />} />
+        <Route path="/admin/account-view/:id" element={<AdminAccountView />} />
         <Route path="/admin/account-request-view" element={<AdminAccountRequestView />} />
         <Route path="/admin/account-report" element={<AdminAccountReport />} />
         <Route path="/admin/agent-view" element={<AdminAgentView />} />
         <Route path="/admin/user-view" element={<AdminUserView />} />
+        <Route path="/admin/user-view/:id" element={<AdminUserView />} />
         <Route path="/admin/event-participants" element={<EventDetails admin />} />
         <Route path="/admin/event-reviews/:id" element={<AgentEventReviews admin />} />
         <Route path="/admin/profile" element={<ProfileSettings role="admin" />} />

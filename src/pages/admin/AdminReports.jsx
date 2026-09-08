@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AppLayout from '../../components/AppLayout.jsx'
-import { AdminRow, AdminSearchBar, greyBtnCls, viewBtnCls } from './AdminLists.jsx'
+import { AdminSearchBar, greyBtnCls, viewBtnCls } from './AdminLists.jsx'
 
 const REPORTS = [
   { id: 1, type: 'account', name: 'Kyrenia Tennis Association', sub: 'Member Since: 3 December, 2026' },
@@ -42,10 +42,10 @@ export default function AdminReports() {
                 )}
                 {r.type === 'event' && (
                   <>
-                    <Link to="/admin/event-participants" className={greyBtnCls}>
+                    <Link to="/admin/reported-event/11" className={greyBtnCls}>
                       Details
                     </Link>
-                    <Link to="/admin/report-view" className={viewBtnCls}>
+                    <Link to="/admin/reported-event/11" className={viewBtnCls}>
                       View Event
                     </Link>
                   </>

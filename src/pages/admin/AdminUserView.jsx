@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { api } from '../../api.js'
 import AppLayout from '../../components/AppLayout.jsx'
 
 const ATTENDED = [
-  { id: 1, name: 'APOEL vs Omonai Derby', sub: 'August 3, 2026  ·  Nicosia', rating: 0, review: null },
-  { id: 2, name: 'Famagusta International Marathon', sub: 'August 15, 2026  ·  Famagusta', rating: 1, review: '"Great event, had so much fun!"' },
-  { id: 3, name: 'Cablenet Run', sub: 'October 11, 2026  ·  Famagusta', rating: 1, review: null },
+  { id: 4, name: 'APOEL vs Omonai Derby', sub: 'August 3, 2026  ·  Nicosia', rating: 0, review: null },
+  { id: 5, name: 'Famagusta International Marathon', sub: 'August 15, 2026  ·  Famagusta', rating: 1, review: '"Great event, had so much fun!"' },
+  { id: 6, name: 'Cablenet Run', sub: 'October 11, 2026  ·  Famagusta', rating: 1, review: null },
 ]
 
 const PAYMENTS = [
@@ -26,15 +28,20 @@ const TABS = ['Attended Events', 'Payments', 'Memberships']
 
 export default function AdminUserView() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const [account, setAccount] = useState(null)
   const [tab, setTab] = useState('Attended Events')
   const [query, setQuery] = useState('')
-  const [reviews, setReviews] = useState(ATTENDED)
+  const [reviews] = useState(ATTENDED)
 
-  const deleteReview = (id) =>
-    setReviews((rs) => rs.map((r) => (r.id === id ? { ...r, rating: 0, review: null } : r)))
+  useEffect(() => {
+    if (!id) return
+    api('/admin/accounts').then((accounts) => setAccount(accounts.find((user) => user.id === Number(id)))).catch(() => {})
+  }, [id])
+  const emptyAccount = account && account.id !== 1
 
   return (
-    <AppLayout title="Sude Katırcıoğlu" role="admin">
+    <AppLayout title={account?.name ?? 'User Account'} role="admin">
       <div className="relative bg-gradient-to-r from-[#2a3157] to-night px-7 pt-6 pb-8">
         <div className="flex items-start justify-between">
           <button
@@ -51,7 +58,7 @@ export default function AdminUserView() {
             BAN USER
           </button>
         </div>
-        <h1 className="mt-6 text-[36px] font-extrabold">Sude Katırcıoğlu</h1>
+        <h1 className="mt-6 text-[36px] font-extrabold">{account?.name ?? 'User Account'}</h1>
         <span className="rounded-[10px] bg-night/70 px-3 py-1 font-mono text-[11px] text-white/80">User</span>
       </div>
 
@@ -80,7 +87,7 @@ export default function AdminUserView() {
           />
         )}
 
-        {tab === 'Attended Events' &&
+        {tab === 'Attended Events' && !emptyAccount &&
           reviews
             .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
             .map((e) => (
@@ -96,24 +103,9 @@ export default function AdminUserView() {
                       {[1, 2, 3, 4, 5].map((n) => (n <= e.rating ? '★' : '☆')).join(' ')}
                     </span>
                   )}
-                  <div className="ml-auto">
-                    {e.rating > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => deleteReview(e.id)}
-                        className="rounded-[10px] bg-night px-5 py-2 font-anon text-[11px] font-bold text-white hover:brightness-150"
-                      >
-                        DELETE REVIEW
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-5 py-2 font-anon text-[11px] font-bold text-accent hover:brightness-125"
-                      >
-                        ADD REVIEW
-                      </button>
-                    )}
-                  </div>
+                  <Link to={`/admin/reported-event/${e.id}`} className="ml-auto rounded-[10px] bg-[rgba(123,136,255,0.2)] px-5 py-2 font-anon text-[11px] font-bold text-accent hover:brightness-125">
+                    View Event
+                  </Link>
                 </div>
                 {e.review && (
                   <p className="mt-3 ml-12 w-fit rounded-[8px] bg-night px-4 py-2 text-[12px] font-bold text-white/90">
@@ -123,7 +115,7 @@ export default function AdminUserView() {
               </div>
             ))}
 
-        {tab === 'Payments' && (
+        {tab === 'Payments' && !emptyAccount && (
           <section className="rounded-[12px] border border-white/10 bg-card p-6">
             <p className="pb-4 text-[13px] font-bold">Recent Payments</p>
             <table className="w-full text-left text-[12px]">
@@ -157,7 +149,7 @@ export default function AdminUserView() {
           </section>
         )}
 
-        {tab === 'Memberships' &&
+        {tab === 'Memberships' && !emptyAccount &&
           MEMBERSHIPS.map((m) => (
             <div key={m.id} className="flex items-center gap-4 rounded-[12px] border border-white/10 bg-card px-6 py-5">
               <span className="size-9 shrink-0 rounded-[8px] bg-[rgba(123,136,255,0.1)]" />
@@ -166,10 +158,16 @@ export default function AdminUserView() {
                 <p className="text-[11px] text-white/60">{m.sub}</p>
               </div>
               <Link
-                to="/admin/account-view"
+                to={`/admin/account-view/${m.id}`}
                 className="rounded-[10px] bg-[rgba(123,136,255,0.2)] px-5 py-2 text-[11px] font-bold text-accent hover:brightness-125"
               >
                 View Info
+              </Link>
+              <Link
+                to="/admin/agent-view/2"
+                className="rounded-[10px] bg-field px-5 py-2 text-[11px] font-bold text-white hover:brightness-125"
+              >
+                View Agent
               </Link>
             </div>
           ))}
