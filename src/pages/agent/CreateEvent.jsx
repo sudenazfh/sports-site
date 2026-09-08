@@ -29,10 +29,13 @@ export default function CreateEvent({ mode = 'agent' }) {
   const [modal, setModal] = useState(null) // 'reject' | 'cancel' | 'reject-report' | 'publish'
 
   useEffect(() => {
-    if (!editing) return
-    api('/agent/events')
-      .then((events) => setEventData(events.find((event) => event.id === Number(id)) ?? null))
-      .catch(() => {})
+    if (!id) return
+    if (editing)
+      api('/agent/events')
+        .then((events) => setEventData(events.find((event) => event.id === Number(id)) ?? null))
+        .catch(() => {})
+    // admin bir başvuruyu inceliyor: gerçek event verisini çek (pending dahil)
+    else api(`/events/${id}`).then(setEventData).catch(() => {})
   }, [editing, id])
 
   async function decide(action) {
@@ -95,11 +98,13 @@ export default function CreateEvent({ mode = 'agent' }) {
     if (!eventData) return
     setDates([{ date: eventData.date ?? '', time: '' }])
     setLocations([eventData.location ?? ''])
+    setType(eventData.price === 0 ? 'free' : 'paid-all')
   }, [eventData])
 
-  if (editing && !eventData) {
+  // inputlar uncontrolled (defaultValue) — veri gelmeden render edilirse şablon değerler kalır
+  if (id && !report && !eventData) {
     return (
-      <AppLayout title="Edit Event" role="agent">
+      <AppLayout title={admin ? 'Event Requests' : 'Edit Event'} role={admin ? 'admin' : 'agent'}>
         <p className="p-10 text-white/60">Loading event...</p>
       </AppLayout>
     )
@@ -107,13 +112,13 @@ export default function CreateEvent({ mode = 'agent' }) {
 
   const headerRight = (
     <span className="mr-auto ml-4 rounded-[10px] bg-field px-3 py-1 font-anon text-[11px] font-bold text-accent">
-      STATUS: {admin ? 'PENDING' : 'ACTIVE'}
+      STATUS: {(eventData?.status ?? (admin ? 'pending' : 'active')).toUpperCase()}
     </span>
   )
 
   return (
     <AppLayout
-      title={report ? 'Reports' : editing ? eventData.name : 'Nicosia Football Tournament'}
+      title={report ? 'Reports' : (eventData?.name ?? 'Nicosia Football Tournament')}
       role={admin || report ? 'admin' : 'agent'}
       headerRight={headerRight}
     >
@@ -130,7 +135,7 @@ export default function CreateEvent({ mode = 'agent' }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className={labelCls} htmlFor="ev-sport">Sport Type</label>
-                <select id="ev-sport" className={inputCls}>
+                <select id="ev-sport" defaultValue={eventData?.category ?? 'Football'} className={inputCls}>
                   <option>Football</option>
                   <option>Basketball</option>
                   <option>Tennis</option>
